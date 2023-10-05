@@ -88,8 +88,6 @@ function M:_draw_highlight(table)
     local row = 1 + math.max(0, cell.row - 1) * 2
     local cell_start, cell_end = table:get_cell_positions(cell.col, cell.row, self.min_value_width)
 
-    print(cell_start, cell_end, row)
-
     vim.api.nvim_buf_set_extmark(
         self.preview_buffer,
         vim.api.nvim_create_namespace("easytables"),
@@ -131,6 +129,21 @@ function M:draw_table(table)
     vim.api.nvim_buf_set_lines(self.preview_buffer, 0, -1, false, representation)
 
     self:_draw_highlight(table)
+end
+
+function M:register_listeners(table)
+    vim.api.nvim_buf_attach(self.prompt_buffer, false, {
+        on_lines = function(_, handle)
+            local lines = vim.api.nvim_buf_get_lines(handle, 0, -1, false)
+
+            vim.schedule(function()
+                local selected_cell = table:get_highlighted_cell()
+
+                table:insert(selected_cell.col, selected_cell.row, lines[1])
+                self:draw_table(table)
+            end)
+        end,
+    })
 end
 
 return M

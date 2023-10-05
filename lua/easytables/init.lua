@@ -62,6 +62,7 @@ local function a()
 
     window:show()
     window:draw_table(own_table)
+    window:register_listeners(own_table)
 end
 
 return {
