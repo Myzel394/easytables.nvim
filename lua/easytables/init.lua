@@ -1,7 +1,7 @@
 local Input = require("nui.input")
 local event = require("nui.utils.autocmd").event
 local table = require("easytables.table")
-local table_builder = require("easytables.tablebuilder")
+local window = require("easytables.window")
 
 local function create_win()
 end
@@ -56,50 +56,12 @@ end
 
 local function a()
     local own_table = table:create(6, 3)
-    local buffer = vim.api.nvim_create_buf(false, true)
+    own_table:highlight_cell(1, 1)
 
-    -- Center
-    local width = 40
-    local height = 20
-    local x = math.floor((vim.o.columns - width) / 2)
-    local win = vim.api.nvim_open_win(buffer, true, {
-        relative = "win",
-        row = math.floor(((vim.o.lines - height) / 2) - 1),
-        col = x,
-        width = width,
-        height = height,
-        style = "minimal",
-        border = "rounded",
-        title = "",
-        title_pos = "center",
-    })
+    local window = window:create()
 
-    vim.api.nvim_set_option_value('winhl', 'Normal:MyHighlight', { win = win })
-
-
-    local new_win = vim.api.nvim_open_win(buffer, true, {
-        relative = "win",
-        row = math.floor(((vim.o.lines - height) / 2) - 1) + height + 1,
-        col = x - 1,
-        width = width,
-        height = 2,
-        style = "minimal",
-        border = "rounded",
-        title = "",
-        title_pos = "center",
-    })
-
-    local representation = table_builder.draw_representation(own_table)
-
-    vim.api.nvim_buf_set_lines(buffer, 0, -1, false, representation)
-
-    vim.api.nvim_buf_attach(buffer, false, {
-        on_lines = function(_, handle, _, firstline, lastline, new_lastline)
-            local new_text = vim.api.nvim_buf_get_lines(handle, firstline, new_lastline, true)
-
-            print(new_text[1])
-        end,
-    })
+    window:show()
+    window:draw_table(own_table)
 end
 
 return {

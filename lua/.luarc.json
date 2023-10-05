@@ -32,6 +32,7 @@
         "/home/myzel394/.local/share/nvim/site/pack/packer/start/tailwindcss-colorizer-cmp.nvim/lua",
         "/home/myzel394/.local/share/nvim/site/pack/packer/start/telescope.nvim/lua",
         "/home/myzel394/.config/nvim/custom_plugins/lua",
-        "${3rd}/luv/library"
+        "${3rd}/luv/library",
+        "${3rd}/luassert/library"
     ]
 }
