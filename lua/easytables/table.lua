@@ -22,6 +22,32 @@ function M:value_at(row, col)
     return self.table[row][col]
 end
 
+function M:get_largest_length_for_column(
+    col --[[ int ]]
+) -- int
+    local largest = #self.table[1][col]
+    for _, row in ipairs(self.table) do
+        if #row[col] > largest then
+            largest = #row[col]
+        end
+    end
+
+    return largest
+end
+
+function M:get_largest_length_for_row(
+    row --[[ int ]]
+) -- int
+    local largest = #self.table[row][1]
+    for _, col in ipairs(self.table[row]) do
+        if #col > largest then
+            largest = #col
+        end
+    end
+
+    return largest
+end
+
 function M:get_largest_length()
     local largest = #self.table[1][1]
     for _, row in ipairs(self.table) do
@@ -33,6 +59,18 @@ function M:get_largest_length()
     end
 
     return largest
+end
+
+function M:get_widths_for_columns(
+    min_width --[[ int ]]
+) -- table
+    local widths = {}
+
+    for i = 1, #self.table[1] do
+        widths[i] = math.max(min_width, self:get_largest_length_for_column(i))
+    end
+
+    return widths
 end
 
 function M:rows_amount()
