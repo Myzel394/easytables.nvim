@@ -1,22 +1,4 @@
-local table = {};
-
-function table.create_new_table(width, height)
-    local table = {}
-
-    for i = 1, height do
-        table[i] = {}
-
-        for j = 1, width do
-            table[i][j] = ""
-        end
-    end
-
-    return table
-end
-
-local function edit_cell(table, x, y, value)
-    table[y][x] = value
-end
+local M = {};
 
 DEFAULT_DRAW_REPRESENTATION_OPTIONS = {
     min_width = 3,
@@ -33,22 +15,6 @@ DEFAULT_DRAW_REPRESENTATION_OPTIONS = {
     bottom_t = "┴",
     cross = "┼"
 }
-
-local function find_largest_value_length(table)
-    local largest_value_length = #table[1][1]
-
-    for i = 1, #table do
-        for j = 1, #table[i] do
-            local cell_width = #table[i][j]
-
-            if cell_width > largest_value_length then
-                largest_value_length = cell_width
-            end
-        end
-    end
-
-    return largest_value_length
-end
 
 function create_horizontal_line(width, cell_width, left, middle, right, middle_t)
     local string = ""
@@ -107,18 +73,18 @@ function table.draw_representation(table, options)
     local vertical = options.vertical or DEFAULT_DRAW_REPRESENTATION_OPTIONS.vertical
 
     local representation = {}
-    local largest_length = find_largest_value_length(table)
+    local largest_length = table:get_largest_length()
     -- If length is shorter than min_width, then add filler to the end of the string
     local length = largest_length < min_width and min_width or largest_length
 
-    local horizontal_divider = create_horizontal_divider(#table[1], length, options)
+    local horizontal_divider = create_horizontal_divider(table:cols_amount(), length, options)
 
-    representation[#representation + 1] = create_horizontal_divider(#table[1], length, { variant = "top" })
+    representation[#representation + 1] = create_horizontal_divider(table:cols_amount(), length, { variant = "top" })
 
-    for i = 1, #table do
+    for i = 1, table:rows_amount() do
         local line = ""
-        for j = 1, #table[i] do
-            local cell = table[i][j]
+        for j = 1, table:cols_amount() do
+            local cell = table:value_at(i, j)
             local cell_width = #cell
 
             if cell_width < min_width then
@@ -127,7 +93,7 @@ function table.draw_representation(table, options)
 
             cell = vertical .. cell
 
-            if j == #table[i] then
+            if j == table:cols_amount() then
                 cell = cell .. vertical
             end
 
@@ -136,12 +102,12 @@ function table.draw_representation(table, options)
 
         representation[#representation + 1] = line
 
-        if i ~= #table then
+        if i ~= table:rows_amount() then
             representation[#representation + 1] = horizontal_divider
         end
     end
 
-    representation[#representation + 1] = create_horizontal_divider(#table[1], length, { variant = "bottom" })
+    representation[#representation + 1] = create_horizontal_divider(table:cols_amount(), length, { variant = "bottom" })
 
     return representation
 end
