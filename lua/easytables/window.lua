@@ -320,16 +320,21 @@ function M:register_listeners()
         function()
             local markdown_table = export:export_table(self.table)
 
-            self:close()
             vim.schedule(function()
-                vim.api.nvim_buf_set_text(
-                    self.previous_buffer,
-                    0,
-                    0,
-                    0,
-                    0,
-                    markdown_table
-                )
+                vim.cmd("bprevious")
+
+                vim.schedule(function()
+                    local cursor = vim.api.nvim_win_get_cursor(0)
+
+                    vim.api.nvim_buf_set_text(
+                        0,
+                        cursor[1] - 1,
+                        cursor[2],
+                        cursor[1] - 1,
+                        cursor[2],
+                        markdown_table
+                    )
+                end)
             end)
         end,
         {}
