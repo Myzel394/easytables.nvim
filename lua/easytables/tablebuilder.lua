@@ -13,7 +13,12 @@ DEFAULT_DRAW_REPRESENTATION_OPTIONS = {
     right_t = "┤",
     top_t = "┬",
     bottom_t = "┴",
-    cross = "┼"
+    cross = "┼",
+    header_left_t = "╞",
+    header_right_t = "╡",
+    header_bottom_t = "╧",
+    header_cross = "╪",
+    header_horizontal = "═",
 }
 
 function create_horizontal_line(cell_widths, left, middle, right, middle_t)
@@ -56,6 +61,10 @@ function create_horizontal_divider(
     local top_t = options.top_t or DEFAULT_DRAW_REPRESENTATION_OPTIONS.top_t
     local bottom_t = options.bottom_t or DEFAULT_DRAW_REPRESENTATION_OPTIONS.bottom_t
     local cross = options.cross or DEFAULT_DRAW_REPRESENTATION_OPTIONS.cross
+    local header_left_t = options.header_left_t or DEFAULT_DRAW_REPRESENTATION_OPTIONS.header_left_t
+    local header_right_t = options.header_right_t or DEFAULT_DRAW_REPRESENTATION_OPTIONS.header_right_t
+    local header_cross = options.header_cross or DEFAULT_DRAW_REPRESENTATION_OPTIONS.header_cross
+    local header_horizontal = options.header_horizontal or DEFAULT_DRAW_REPRESENTATION_OPTIONS.header_horizontal
     local min_width = options.min_width or DEFAULT_DRAW_REPRESENTATION_OPTIONS.min_width
     local variant = options.variant or "between"
 
@@ -67,10 +76,15 @@ function create_horizontal_divider(
         return create_horizontal_line(widths, left_t, horizontal, right_t, cross)
     elseif variant == "bottom" then
         return create_horizontal_line(widths, bottom_left, horizontal, bottom_right, bottom_t)
+    elseif variant == "header" then
+        return create_horizontal_line(widths, header_left_t, header_horizontal, header_right_t, header_cross)
     end
 end
 
-function table.draw_representation(table, options)
+function table.draw_representation(
+    table,      -- [[ table ]]
+    options     -- [[ table ]] -- optional
+)
     local options = options or {}
     local min_width = options.min_width or DEFAULT_DRAW_REPRESENTATION_OPTIONS.min_width
     local filler = options.filler or DEFAULT_DRAW_REPRESENTATION_OPTIONS.filler
@@ -107,7 +121,9 @@ function table.draw_representation(table, options)
 
         representation[#representation + 1] = line
 
-        if i ~= table:rows_amount() then
+        if i == 1 and table.header_enabled then
+            representation[#representation + 1] = create_horizontal_divider(table, { variant = "header" })
+        elseif i ~= table:rows_amount() then
             representation[#representation + 1] = horizontal_divider
         end
     end

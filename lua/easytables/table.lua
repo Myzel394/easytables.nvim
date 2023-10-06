@@ -14,6 +14,7 @@ function M:create(cols, rows)
         col = 1,
         row = 1,
     }
+    self.header_enabled = true
 
     return self
 end
@@ -24,6 +25,10 @@ end
 
 function M:value_at(row, col)
     return self.table[row][col]
+end
+
+function M:toggle_header()
+    self.header_enabled = not self.header_enabled
 end
 
 function M:get_largest_length_for_column(

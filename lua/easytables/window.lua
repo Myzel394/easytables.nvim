@@ -293,6 +293,16 @@ function M:register_listeners()
         end,
         {}
     )
+
+    vim.api.nvim_buf_create_user_command(
+        self.prompt_buffer,
+        "ToggleHeader",
+        function()
+            self.table:toggle_header()
+            self:draw_table()
+        end,
+        {}
+    )
 end
 
 return M
