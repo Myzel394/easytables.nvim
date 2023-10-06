@@ -221,6 +221,78 @@ function M:register_listeners()
         end,
         {}
     )
+
+    vim.api.nvim_buf_create_user_command(
+        self.prompt_buffer,
+        "SwapWithRightCell",
+        function()
+            local current_cell = self.table:get_highlighted_cell()
+
+            local right_cell = {
+                row = current_cell.row,
+                col = current_cell.col == self.table:cols_amount() and 1 or current_cell.col + 1,
+            }
+            self.table:swap_contents(current_cell, right_cell)
+            self.table:set_highlighted_cell(right_cell)
+            self:draw_table()
+            self:_reset_prompt()
+        end,
+        {}
+    )
+
+    vim.api.nvim_buf_create_user_command(
+        self.prompt_buffer,
+        "SwapWithLeftCell",
+        function()
+            local current_cell = self.table:get_highlighted_cell()
+
+            local left_cell = {
+                row = current_cell.row,
+                col = current_cell.col == 1 and self.table:cols_amount() or current_cell.col - 1,
+            }
+            self.table:swap_contents(current_cell, left_cell)
+            self.table:set_highlighted_cell(left_cell)
+            self:draw_table()
+            self:_reset_prompt()
+        end,
+        {}
+    )
+
+    vim.api.nvim_buf_create_user_command(
+        self.prompt_buffer,
+        "SwapWithUpperCell",
+        function()
+            local current_cell = self.table:get_highlighted_cell()
+
+            local upper_cell = {
+                row = current_cell.row == 1 and self.table:rows_amount() or current_cell.row - 1,
+                col = current_cell.col,
+            }
+            self.table:swap_contents(current_cell, upper_cell)
+            self.table:set_highlighted_cell(upper_cell)
+            self:draw_table()
+            self:_reset_prompt()
+        end,
+        {}
+    )
+
+    vim.api.nvim_buf_create_user_command(
+        self.prompt_buffer,
+        "SwapWithLowerCell",
+        function()
+            local current_cell = self.table:get_highlighted_cell()
+
+            local lower_cell = {
+                row = current_cell.row == self.table:rows_amount() and 1 or current_cell.row + 1,
+                col = current_cell.col,
+            }
+            self.table:swap_contents(current_cell, lower_cell)
+            self.table:set_highlighted_cell(lower_cell)
+            self:draw_table()
+            self:_reset_prompt()
+        end,
+        {}
+    )
 end
 
 return M

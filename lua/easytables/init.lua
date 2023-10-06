@@ -56,9 +56,8 @@ end
 
 local function a()
     local own_table = table:create(6, 3)
-    own_table:highlight_cell(1, 1)
 
-    local window = window:create(table)
+    local window = window:create(own_table)
 
     window:show()
     window:draw_table()

@@ -10,6 +10,10 @@ function M:create(cols, rows)
     end
 
     self.table = table
+    self.highlighted_cell = {
+        col = 1,
+        row = 1,
+    }
 
     return self
 end
@@ -72,8 +76,8 @@ function M:cols_amount()
     return #self.table[1]
 end
 
-function M:highlight_cell(col, row)
-    self.highlighted_cell = { row = row, col = col }
+function M:set_highlighted_cell(cell)
+    self.highlighted_cell = cell
 end
 
 function M:get_highlighted_cell()
@@ -82,10 +86,6 @@ end
 
 -- Jumps to next cell in row. If there is no next cell, it jumps to the first cell in the next row.
 function M:move_highlight_to_next_cell()
-    if self.highlighted_cell == nil then
-        return
-    end
-
     if self.highlighted_cell.col == self:cols_amount() then
         if self.highlighted_cell.row == self:rows_amount() then
             -- Reset highlight to the first cell
@@ -109,10 +109,6 @@ end
 
 -- Jumps to previous cell in row. If there is no previous cell, it jumps to the last cell in the previous row.
 function M:move_highlight_to_previous_cell()
-    if self.highlighted_cell == nil then
-        return
-    end
-
     if self.highlighted_cell.col == 1 then
         if self.highlighted_cell.row == 1 then
             -- Reset highlight to the last cell
@@ -136,10 +132,6 @@ end
 
 -- Moves highlight to the right, jumps back to the first cell in the same row if it is already at the rightmost cell.
 function M:move_highlight_right()
-    if self.highlighted_cell == nil then
-        return
-    end
-
     if self.highlighted_cell.col == self:cols_amount() then
         self.highlighted_cell.col = 1
     else
@@ -149,10 +141,6 @@ end
 
 -- Moves highlight to the left, jumps back to the last cell in the same row if it is already at the leftmost cell.
 function M:move_highlight_left()
-    if self.highlighted_cell == nil then
-        return
-    end
-
     if self.highlighted_cell.col == 1 then
         self.highlighted_cell.col = self:cols_amount()
     else
@@ -162,10 +150,6 @@ end
 
 -- Moves highlight to the top, jumps back to the last row if it is already at the topmost row.
 function M:move_highlight_up()
-    if self.highlighted_cell == nil then
-        return
-    end
-
     if self.highlighted_cell.row == 1 then
         self.highlighted_cell.row = self:rows_amount()
     else
@@ -175,10 +159,6 @@ end
 
 -- Moves highlight to the bottom, jumps back to the first row if it is already at the bottommost row.
 function M:move_highlight_down()
-    if self.highlighted_cell == nil then
-        return
-    end
-
     if self.highlighted_cell.row == self:rows_amount() then
         self.highlighted_cell.row = 1
     else
@@ -256,6 +236,14 @@ function M:get_horizontal_border_width(
     end
 
     return start_position, end_position
+end
+
+function M:swap_contents(first, second)
+    local first_value = self:value_at(first.row, first.col)
+    local second_value = self:value_at(second.row, second.col)
+
+    self:insert(first.col, first.row, second_value)
+    self:insert(second.col, second.row, first_value)
 end
 
 return M
