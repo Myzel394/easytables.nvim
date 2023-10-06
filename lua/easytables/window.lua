@@ -1,4 +1,5 @@
 local table_builder = require("easytables.tablebuilder")
+local export = require("easytables.export")
 local math = require("math")
 
 local M = {}
@@ -20,6 +21,7 @@ function M:create(table, options)
     self.height = options.height or DEFAULT_OPTIONS.height
     self.min_value_width = options.min_value_width or DEFAULT_OPTIONS.min_value_width
     self.table = table
+    self.previous_buffer = vim.api.nvim_get_current_buf()
 
     return self
 end
@@ -140,6 +142,14 @@ function M:draw_table()
     vim.api.nvim_buf_set_lines(self.preview_buffer, 0, -1, false, representation)
 
     self:_draw_highlight()
+end
+
+function M:close()
+    vim.api.nvim_win_close(self.preview_window, true)
+    vim.api.nvim_win_close(self.prompt_window, true)
+
+    self.preview_window = nil
+    self.prompt_window = nil
 end
 
 function M:register_listeners()
@@ -300,6 +310,27 @@ function M:register_listeners()
         function()
             self.table:toggle_header()
             self:draw_table()
+        end,
+        {}
+    )
+
+    vim.api.nvim_buf_create_user_command(
+        self.prompt_buffer,
+        "ExportTable",
+        function()
+            local markdown_table = export:export_table(self.table)
+
+            self:close()
+            vim.schedule(function()
+                vim.api.nvim_buf_set_text(
+                    self.previous_buffer,
+                    0,
+                    0,
+                    0,
+                    0,
+                    markdown_table
+                )
+            end)
         end,
         {}
     )
