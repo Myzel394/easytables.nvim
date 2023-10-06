@@ -23,25 +23,15 @@ function M:value_at(row, col)
 end
 
 function M:get_largest_length_for_column(
-    col --[[ int ]]
+    col, --[[ int ]]
+    should_use_strwidth --[[ bool ]]
 ) -- int
+    should_use_strwidth = should_use_strwidth or false
+
     local largest = #self.table[1][col]
     for _, row in ipairs(self.table) do
         if #row[col] > largest then
-            largest = #row[col]
-        end
-    end
-
-    return largest
-end
-
-function M:get_largest_length_for_row(
-    row --[[ int ]]
-) -- int
-    local largest = #self.table[row][1]
-    for _, col in ipairs(self.table[row]) do
-        if #col > largest then
-            largest = #col
+            largest = should_use_strwidth and vim.api.nvim_strwidth(row[col]) or #row[col]
         end
     end
 
@@ -62,12 +52,13 @@ function M:get_largest_length()
 end
 
 function M:get_widths_for_columns(
-    min_width --[[ int ]]
+    min_width --[[ int ]],
+    should_use_strwidth --[[ bool ]]
 ) -- table
     local widths = {}
 
     for i = 1, #self.table[1] do
-        widths[i] = math.max(min_width, self:get_largest_length_for_column(i))
+        widths[i] = math.max(min_width, self:get_largest_length_for_column(i, should_use_strwidth))
     end
 
     return widths
@@ -109,17 +100,73 @@ function M:move_highlight_to_next_cell()
 end
 
 function M:get_cell_positions(col, row, min_value_width)
-    local start_position = 1
+    local length = #"│"
+    local start_position = 0
 
     for i, cell in ipairs(self.table[row]) do
         if i == col then
             break
         end
 
-        start_position = start_position + math.max(min_value_width, #cell) + 1
+        start_position = start_position + math.max(min_value_width, #cell) + length
     end
 
-    local end_position = start_position + math.max(min_value_width, #self.table[row][col])
+    local end_position = math.max(length, start_position) + math.max(min_value_width, #self.table[row][col]) + length
+
+    if col ~= 1 then
+        -- Add `length again because of the border left and right
+        end_position = end_position + length
+    end
+
+    return start_position, end_position
+end
+
+function M:get_horizontal_border_width(
+    col,            -- [[ int ]]
+    row,            -- [[ int ]]
+    min_value_width -- [[ int ]]
+)
+    local length = #"─"
+    local start_position = 0
+    local widths = self:get_widths_for_columns(min_value_width, true)
+
+    for i, _ in ipairs(self.table[1]) do
+        if i == col then
+            break
+        end
+
+        start_position = start_position + math.max(min_value_width, widths[i]) * length
+
+        if row == 1 then
+            start_position = start_position + #"┬"
+        else
+            start_position = start_position + #"┼"
+        end
+    end
+
+    local end_position = 0
+
+    if col == 1 then
+        end_position = #"┬"
+    else
+        end_position = #"┤"
+    end
+
+    end_position = end_position + start_position + math.max(min_value_width, widths[col]) * length
+
+    if row == 1 then
+        if col == 1 then
+            end_position = end_position + #"┬"
+        else
+            end_position = end_position + #"┐"
+        end
+    else
+        if col == 1 then
+            end_position = end_position + #"├"
+        else
+            end_position = end_position + #"┤"
+        end
+    end
 
     return start_position, end_position
 end

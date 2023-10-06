@@ -87,21 +87,15 @@ function M:_draw_highlight(table)
 
     local row = 1 + math.max(0, cell.row - 1) * 2
     local cell_start, cell_end = table:get_cell_positions(cell.col, cell.row, self.min_value_width)
-
-    print(cell_start, cell_end)
-
-    --cell_start = 10 + (cell_start - 2) * 3
-
-    -- No idea why, but the table characters take up multiple characters per one characters allegedly
-    local table_cell_end = 10 + (cell_end - 2) * 3
+    local border_start, border_end = table:get_horizontal_border_width(cell.col, cell.row, self.min_value_width)
 
     vim.api.nvim_buf_set_extmark(
         self.preview_buffer,
         vim.api.nvim_create_namespace("easytables"),
         row - 1,
-        cell_start,
+        border_start,
         {
-            end_col = table_cell_end,
+            end_col = border_end,
             hl_group = "NormalFloat",
             hl_mode = "combine",
         }
@@ -110,9 +104,9 @@ function M:_draw_highlight(table)
         self.preview_buffer,
         vim.api.nvim_create_namespace("easytables"),
         row + 1,
-        0,
+        border_start,
         {
-            end_col = 6,
+            end_col = border_end,
             hl_group = "NormalFloat",
             hl_mode = "combine",
         }
@@ -121,10 +115,9 @@ function M:_draw_highlight(table)
         self.preview_buffer,
         vim.api.nvim_create_namespace("easytables"),
         row,
-        0,
+        cell_start,
         {
-            -- +2 because 2 are missing and +4 for the table character
-            end_col = 3,
+            end_col = cell_end,
             hl_group = "NormalFloat",
             hl_mode = "combine",
         }
