@@ -58,11 +58,11 @@ local function a()
     local own_table = table:create(6, 3)
     own_table:highlight_cell(1, 1)
 
-    local window = window:create()
+    local window = window:create(table)
 
     window:show()
-    window:draw_table(own_table)
-    window:register_listeners(own_table)
+    window:draw_table()
+    window:register_listeners()
 end
 
 return {

@@ -11,7 +11,7 @@ DEFAULT_OPTIONS = {
     min_value_width = 3,
 }
 
-function M:create(options)
+function M:create(table, options)
     options = options or {}
 
     self.title = options.title or DEFAULT_OPTIONS.title
@@ -19,6 +19,7 @@ function M:create(options)
     self.width = options.width or DEFAULT_OPTIONS.width
     self.height = options.height or DEFAULT_OPTIONS.height
     self.min_value_width = options.min_value_width or DEFAULT_OPTIONS.min_value_width
+    self.table = table
 
     return self
 end
@@ -79,20 +80,24 @@ function M:show()
 end
 
 function M:_reset_prompt()
-    vim.api.nvim_buf_set_lines(self.prompt_buffer, 0, -1, false, { "" })
+    local highlighted_cell = self.table:get_highlighted_cell()
+    local newtext = self.table:value_at(highlighted_cell.row, highlighted_cell.col)
+    local newlines = { newtext }
+
+    vim.api.nvim_buf_set_lines(self.prompt_buffer, 0, -1, false, newlines)
 end
 
-function M:_draw_highlight(table)
-    local cell = table:get_highlighted_cell()
+function M:_draw_highlight()
+    local cell = self.table:get_highlighted_cell()
 
     if cell == nil then
         return
     end
 
     local row = 1 + math.max(0, cell.row - 1) * 2
-    local widths = table:get_widths_for_columns(self.min_value_width)
-    local cell_start, cell_end = table:get_cell_positions(cell.col, cell.row, widths)
-    local border_start, border_end = table:get_horizontal_border_width(cell.col, cell.row, self.min_value_width)
+    local widths = self.table:get_widths_for_columns(self.min_value_width)
+    local cell_start, cell_end = self.table:get_cell_positions(cell.col, cell.row, widths)
+    local border_start, border_end = self.table:get_horizontal_border_width(cell.col, cell.row, self.min_value_width)
 
     vim.api.nvim_buf_set_extmark(
         self.preview_buffer,
@@ -129,24 +134,24 @@ function M:_draw_highlight(table)
     )
 end
 
-function M:draw_table(table)
-    local representation = table_builder.draw_representation(table)
+function M:draw_table()
+    local representation = table_builder.draw_representation(self.table)
 
     vim.api.nvim_buf_set_lines(self.preview_buffer, 0, -1, false, representation)
 
-    self:_draw_highlight(table)
+    self:_draw_highlight()
 end
 
-function M:register_listeners(table)
+function M:register_listeners()
     vim.api.nvim_buf_attach(self.prompt_buffer, false, {
         on_lines = function(_, handle)
             local lines = vim.api.nvim_buf_get_lines(handle, 0, -1, false)
 
             vim.schedule(function()
-                local selected_cell = table:get_highlighted_cell()
+                local selected_cell = self.table:get_highlighted_cell()
 
-                table:insert(selected_cell.col, selected_cell.row, lines[1])
-                self:draw_table(table)
+                self.table:insert(selected_cell.col, selected_cell.row, lines[1])
+                self:draw_table()
             end)
         end,
     })
@@ -155,8 +160,8 @@ function M:register_listeners(table)
         self.prompt_buffer,
         "JumpToNextCell",
         function()
-            table:move_highlight_to_next_cell()
-            self:draw_table(table)
+            self.table:move_highlight_to_next_cell()
+            self:draw_table()
             self:_reset_prompt()
         end,
         {}
@@ -166,8 +171,8 @@ function M:register_listeners(table)
         self.prompt_buffer,
         "JumpToPreviousCell",
         function()
-            table:move_highlight_to_previous_cell()
-            self:draw_table(table)
+            self.table:move_highlight_to_previous_cell()
+            self:draw_table()
             self:_reset_prompt()
         end,
         {}
@@ -177,8 +182,8 @@ function M:register_listeners(table)
         self.prompt_buffer,
         "JumpDown",
         function()
-            table:move_highlight_down()
-            self:draw_table(table)
+            self.table:move_highlight_down()
+            self:draw_table()
             self:_reset_prompt()
         end,
         {}
@@ -188,8 +193,8 @@ function M:register_listeners(table)
         self.prompt_buffer,
         "JumpUp",
         function()
-            table:move_highlight_up()
-            self:draw_table(table)
+            self.table:move_highlight_up()
+            self:draw_table()
             self:_reset_prompt()
         end,
         {}
@@ -199,8 +204,8 @@ function M:register_listeners(table)
         self.prompt_buffer,
         "JumpLeft",
         function()
-            table:move_highlight_left()
-            self:draw_table(table)
+            self.table:move_highlight_left()
+            self:draw_table()
             self:_reset_prompt()
         end,
         {}
@@ -210,8 +215,8 @@ function M:register_listeners(table)
         self.prompt_buffer,
         "JumpRight",
         function()
-            table:move_highlight_right()
-            self:draw_table(table)
+            self.table:move_highlight_right()
+            self:draw_table()
             self:_reset_prompt()
         end,
         {}
