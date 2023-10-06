@@ -155,6 +155,56 @@ function M:register_listeners(table)
         end,
         {}
     )
+
+    vim.api.nvim_buf_create_user_command(
+        self.prompt_buffer,
+        "JumpToPreviousCell",
+        function()
+            table:move_highlight_to_previous_cell()
+            self:draw_table(table)
+        end,
+        {}
+    )
+
+    vim.api.nvim_buf_create_user_command(
+        self.prompt_buffer,
+        "JumpDown",
+        function()
+            table:move_highlight_down()
+            self:draw_table(table)
+        end,
+        {}
+    )
+
+    vim.api.nvim_buf_create_user_command(
+        self.prompt_buffer,
+        "JumpUp",
+        function()
+            table:move_highlight_up()
+            self:draw_table(table)
+        end,
+        {}
+    )
+
+    vim.api.nvim_buf_create_user_command(
+        self.prompt_buffer,
+        "JumpLeft",
+        function()
+            table:move_highlight_left()
+            self:draw_table(table)
+        end,
+        {}
+    )
+
+    vim.api.nvim_buf_create_user_command(
+        self.prompt_buffer,
+        "JumpRight",
+        function()
+            table:move_highlight_right()
+            self:draw_table(table)
+        end,
+        {}
+    )
 end
 
 return M

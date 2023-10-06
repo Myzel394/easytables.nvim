@@ -87,15 +87,102 @@ function M:move_highlight_to_next_cell()
     end
 
     if self.highlighted_cell.col == self:cols_amount() then
-        self.highlighted_cell = {
-            col = 1,
-            row = self.highlighted_cell.row + 1,
-        }
+        if self.highlighted_cell.row == self:rows_amount() then
+            -- Reset highlight to the first cell
+            self.highlighted_cell = {
+                col = 1,
+                row = 1,
+            }
+        else
+            self.highlighted_cell = {
+                col = 1,
+                row = self.highlighted_cell.row + 1,
+            }
+        end
     else
         self.highlighted_cell = {
             col = self.highlighted_cell.col + 1,
             row = self.highlighted_cell.row,
         }
+    end
+end
+
+-- Jumps to previous cell in row. If there is no previous cell, it jumps to the last cell in the previous row.
+function M:move_highlight_to_previous_cell()
+    if self.highlighted_cell == nil then
+        return
+    end
+
+    if self.highlighted_cell.col == 1 then
+        if self.highlighted_cell.row == 1 then
+            -- Reset highlight to the last cell
+            self.highlighted_cell = {
+                col = self:cols_amount(),
+                row = self:rows_amount(),
+            }
+        else
+            self.highlighted_cell = {
+                col = self:cols_amount(),
+                row = self.highlighted_cell.row - 1,
+            }
+        end
+    else
+        self.highlighted_cell = {
+            col = self.highlighted_cell.col - 1,
+            row = self.highlighted_cell.row,
+        }
+    end
+end
+
+-- Moves highlight to the right, jumps back to the first cell in the same row if it is already at the rightmost cell.
+function M:move_highlight_right()
+    if self.highlighted_cell == nil then
+        return
+    end
+
+    if self.highlighted_cell.col == self:cols_amount() then
+        self.highlighted_cell.col = 1
+    else
+        self.highlighted_cell.col = self.highlighted_cell.col + 1
+    end
+end
+
+-- Moves highlight to the left, jumps back to the last cell in the same row if it is already at the leftmost cell.
+function M:move_highlight_left()
+    if self.highlighted_cell == nil then
+        return
+    end
+
+    if self.highlighted_cell.col == 1 then
+        self.highlighted_cell.col = self:cols_amount()
+    else
+        self.highlighted_cell.col = self.highlighted_cell.col - 1
+    end
+end
+
+-- Moves highlight to the top, jumps back to the last row if it is already at the topmost row.
+function M:move_highlight_up()
+    if self.highlighted_cell == nil then
+        return
+    end
+
+    if self.highlighted_cell.row == 1 then
+        self.highlighted_cell.row = self:rows_amount()
+    else
+        self.highlighted_cell.row = self.highlighted_cell.row - 1
+    end
+end
+
+-- Moves highlight to the bottom, jumps back to the first row if it is already at the bottommost row.
+function M:move_highlight_down()
+    if self.highlighted_cell == nil then
+        return
+    end
+
+    if self.highlighted_cell.row == self:rows_amount() then
+        self.highlighted_cell.row = 1
+    else
+        self.highlighted_cell.row = self.highlighted_cell.row + 1
     end
 end
 
