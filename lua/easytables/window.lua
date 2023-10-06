@@ -78,6 +78,10 @@ function M:show()
     self:_open_prompt_window()
 end
 
+function M:_reset_prompt()
+    vim.api.nvim_buf_set_lines(self.prompt_buffer, 0, -1, false, { "" })
+end
+
 function M:_draw_highlight(table)
     local cell = table:get_highlighted_cell()
 
@@ -86,7 +90,8 @@ function M:_draw_highlight(table)
     end
 
     local row = 1 + math.max(0, cell.row - 1) * 2
-    local cell_start, cell_end = table:get_cell_positions(cell.col, cell.row, self.min_value_width)
+    local widths = table:get_widths_for_columns(self.min_value_width)
+    local cell_start, cell_end = table:get_cell_positions(cell.col, cell.row, widths)
     local border_start, border_end = table:get_horizontal_border_width(cell.col, cell.row, self.min_value_width)
 
     vim.api.nvim_buf_set_extmark(
@@ -152,6 +157,7 @@ function M:register_listeners(table)
         function()
             table:move_highlight_to_next_cell()
             self:draw_table(table)
+            self:_reset_prompt()
         end,
         {}
     )
@@ -162,6 +168,7 @@ function M:register_listeners(table)
         function()
             table:move_highlight_to_previous_cell()
             self:draw_table(table)
+            self:_reset_prompt()
         end,
         {}
     )
@@ -172,6 +179,7 @@ function M:register_listeners(table)
         function()
             table:move_highlight_down()
             self:draw_table(table)
+            self:_reset_prompt()
         end,
         {}
     )
@@ -182,6 +190,7 @@ function M:register_listeners(table)
         function()
             table:move_highlight_up()
             self:draw_table(table)
+            self:_reset_prompt()
         end,
         {}
     )
@@ -192,6 +201,7 @@ function M:register_listeners(table)
         function()
             table:move_highlight_left()
             self:draw_table(table)
+            self:_reset_prompt()
         end,
         {}
     )
@@ -202,6 +212,7 @@ function M:register_listeners(table)
         function()
             table:move_highlight_right()
             self:draw_table(table)
+            self:_reset_prompt()
         end,
         {}
     )

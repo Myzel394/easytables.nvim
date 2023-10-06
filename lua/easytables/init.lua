@@ -55,9 +55,6 @@ local function get_size()
 end
 
 local function a()
-    print("size")
-    print(#"┐┐")
-    print(vim.api.nvim_strwidth("┐┐"))
     local own_table = table:create(6, 3)
     own_table:highlight_cell(1, 1)
 

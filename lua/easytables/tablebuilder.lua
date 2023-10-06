@@ -89,14 +89,15 @@ function table.draw_representation(table, options)
         for j = 1, table:cols_amount() do
             local length = column_widths[j]
             local cell = table:value_at(i, j)
-            local cell_width = #cell
+            local cell_width = vim.api.nvim_strwidth(cell)
 
-            if cell_width < min_width then
+            if cell_width < length then
                 cell = cell .. string.rep(filler, length - cell_width)
             end
 
             cell = vertical .. cell
 
+            -- Add most right vertical divider
             if j == table:cols_amount() then
                 cell = cell .. vertical
             end

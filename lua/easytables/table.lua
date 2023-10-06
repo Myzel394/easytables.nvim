@@ -14,7 +14,7 @@ function M:create(cols, rows)
     return self
 end
 
-function M:insert(row, col, value)
+function M:insert(col, row, value)
     self.table[row][col] = value
 end
 
@@ -28,7 +28,7 @@ function M:get_largest_length_for_column(
 ) -- int
     should_use_strwidth = should_use_strwidth or false
 
-    local largest = #self.table[1][col]
+    local largest = 0
     for _, row in ipairs(self.table) do
         if #row[col] > largest then
             largest = should_use_strwidth and vim.api.nvim_strwidth(row[col]) or #row[col]
@@ -186,19 +186,19 @@ function M:move_highlight_down()
     end
 end
 
-function M:get_cell_positions(col, row, min_value_width)
+function M:get_cell_positions(col, row, widths)
     local length = #"│"
     local start_position = 0
 
-    for i, cell in ipairs(self.table[row]) do
+    for i, _ in ipairs(self.table[row]) do
         if i == col then
             break
         end
 
-        start_position = start_position + math.max(min_value_width, #cell) + length
+        start_position = start_position + widths[i] + length
     end
 
-    local end_position = math.max(length, start_position) + math.max(min_value_width, #self.table[row][col]) + length
+    local end_position = math.max(length, start_position) + widths[col] + length
 
     if col ~= 1 then
         -- Add `length again because of the border left and right
