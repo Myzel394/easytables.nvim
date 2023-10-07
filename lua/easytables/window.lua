@@ -1,37 +1,33 @@
 local table_builder = require("easytables.tablebuilder")
 local export = require("easytables.export")
+local o = require("easytables.options")
 local math = require("math")
 
 local M = {}
 
-DEFAULT_OPTIONS = {
-    title = "Table",
-    prompt_title = "Content",
-    width = 60,
-    height = 30,
-    min_value_width = 3,
-}
-
 function M:create(table, options)
     options = options or {}
 
-    self.title = options.title or DEFAULT_OPTIONS.title
-    self.prompt_title = options.prompt_title or DEFAULT_OPTIONS.prompt_title
-    self.width = options.width or DEFAULT_OPTIONS.width
-    self.height = options.height or DEFAULT_OPTIONS.height
-    self.min_value_width = options.min_value_width or DEFAULT_OPTIONS.min_value_width
     self.table = table
     self.previous_window = vim.api.nvim_get_current_win()
 
     return self
 end
 
+function M:_get_width()
+    return 60
+end
+
+function M:_get_preview_height()
+    return 20
+end
+
 function M:get_x()
-    return math.floor((vim.o.columns - self.width) / 2)
+    return math.floor((vim.o.columns - self:_get_width()) / 2)
 end
 
 function M:get_y()
-    return math.floor(((vim.o.lines - self.height) / 2) - 1)
+    return math.floor(((vim.o.lines - self:_get_preview_height()) / 2) - 1)
 end
 
 function M:_open_preview_window()
@@ -40,30 +36,34 @@ function M:_open_preview_window()
         relative = "win",
         col = self:get_x(),
         row = self:get_y(),
-        width = self.width,
-        height = self.height,
+        width = self:_get_width(),
+        height = self:_get_preview_height(),
         style = "minimal",
         border = "rounded",
-        title = self.title,
+        title = o.options.table.window.preview_title,
         title_pos = "center",
     })
 
     -- Disable default highlight
-    vim.api.nvim_set_option_value("winhighlight", "Normal:Normal",
-        { win = self.preview_window })
+    vim.api.nvim_set_option_value(
+        "winhighlight",
+        "Normal:Normal",
+        { win = self.preview_window }
+    )
 end
 
 function M:_open_prompt_window()
     self.prompt_buffer = vim.api.nvim_create_buf(false, false)
     self.prompt_window = vim.api.nvim_open_win(self.prompt_buffer, true, {
         relative = "win",
+        -- No idea why, but the window is shifted one cell to the right by default
         col = self:get_x() - 1,
-        row = self:get_y() + self.height + 2,
-        width = self.width,
+        row = self:get_y() + self:_get_preview_height() + 2,
+        width = self:_get_width(),
         height = 2,
         style = "minimal",
         border = "rounded",
-        title = self.prompt_title,
+        title = o.options.table.window.prompt_title,
         title_pos = "center",
     })
 
@@ -147,7 +147,9 @@ function M:close()
     vim.api.nvim_win_close(self.preview_window, true)
     vim.api.nvim_win_close(self.prompt_window, true)
 
-    vim.api.nvim_set_current_win(self.previous_window)
+    pcall(function()
+        vim.api.nvim_set_current_win(self.previous_window)
+    end)
 
     self.preview_window = nil
     self.prompt_window = nil

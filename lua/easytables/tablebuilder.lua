@@ -1,27 +1,6 @@
-local M = {};
+local o = require("easytables.options")
 
-DEFAULT_DRAW_REPRESENTATION_OPTIONS = {
-    min_width = 3,
-    filler = " ",
-    top_left = "┌",
-    top_right = "┐",
-    bottom_left = "└",
-    bottom_right = "┘",
-    horizontal = "─",
-    vertical = "│",
-    left_t = "├",
-    right_t = "┤",
-    top_t = "┬",
-    bottom_t = "┴",
-    cross = "┼",
-    header_left_t = "╞",
-    header_right_t = "╡",
-    header_bottom_t = "╧",
-    header_cross = "╪",
-    header_horizontal = "═",
-}
-
-function create_horizontal_line(cell_widths, left, middle, right, middle_t)
+local function create_horizontal_line(cell_widths, left, middle, right, middle_t)
     local string = ""
 
     string = string .. left
@@ -39,81 +18,92 @@ function create_horizontal_line(cell_widths, left, middle, right, middle_t)
     return string
 end
 
--- Creates a horizontal divider like this:
--- `create_horizontal_divider(5, 5, {variant = "top"})`:
--- ┌─────┬─────┬─────┬─────┬─────┐
--- `create_horizontal_divider(5, 5, {variant = "between"})`:
--- ├─────┼─────┼─────┼─────┼─────┤
--- `create_horizontal_divider(5, 5, {variant = "bottom"})`:
--- └─────┴─────┴─────┴─────┴─────┘
-function create_horizontal_divider(
+---Creates a horizontal divider like this:
+---`create_horizontal_divider(5, 5, {variant = "top"})`:
+---┌─────┬─────┬─────┬─────┬─────┐
+---`create_horizontal_divider(5, 5, {variant = "between"})`:
+---├─────┼─────┼─────┼─────┼─────┤
+---`create_horizontal_divider(5, 5, {variant = "bottom"})`:
+---└─────┴─────┴─────┴─────┴─────┘
+---@param table table
+---@param[opt="between"] variant string Either "top", "between" or "bottom"
+---@return string
+local function create_horizontal_divider(
     table,
-    options -- [[ table ]] -- optional
+    variant
 )
-    local options = options or {}
-    local top_left = options.top_left or DEFAULT_DRAW_REPRESENTATION_OPTIONS.top_left
-    local top_right = options.top_right or DEFAULT_DRAW_REPRESENTATION_OPTIONS.top_right
-    local bottom_left = options.bottom_left or DEFAULT_DRAW_REPRESENTATION_OPTIONS.bottom_left
-    local bottom_right = options.bottom_right or DEFAULT_DRAW_REPRESENTATION_OPTIONS.bottom_right
-    local horizontal = options.horizontal or DEFAULT_DRAW_REPRESENTATION_OPTIONS.horizontal
-    local left_t = options.left_t or DEFAULT_DRAW_REPRESENTATION_OPTIONS.left_t
-    local right_t = options.right_t or DEFAULT_DRAW_REPRESENTATION_OPTIONS.right_t
-    local top_t = options.top_t or DEFAULT_DRAW_REPRESENTATION_OPTIONS.top_t
-    local bottom_t = options.bottom_t or DEFAULT_DRAW_REPRESENTATION_OPTIONS.bottom_t
-    local cross = options.cross or DEFAULT_DRAW_REPRESENTATION_OPTIONS.cross
-    local header_left_t = options.header_left_t or DEFAULT_DRAW_REPRESENTATION_OPTIONS.header_left_t
-    local header_right_t = options.header_right_t or DEFAULT_DRAW_REPRESENTATION_OPTIONS.header_right_t
-    local header_cross = options.header_cross or DEFAULT_DRAW_REPRESENTATION_OPTIONS.header_cross
-    local header_horizontal = options.header_horizontal or DEFAULT_DRAW_REPRESENTATION_OPTIONS.header_horizontal
-    local min_width = options.min_width or DEFAULT_DRAW_REPRESENTATION_OPTIONS.min_width
-    local variant = options.variant or "between"
+    variant = variant or "between"
 
-    local widths = table:get_widths_for_columns(min_width)
+    local widths = table:get_widths_for_columns()
 
     if variant == "top" then
-        return create_horizontal_line(widths, top_left, horizontal, top_right, top_t)
+        return create_horizontal_line(
+            widths,
+            o.options.table.border.top_left,
+            o.options.table.border.horizontal,
+            o.options.table.border.top_right,
+            o.options.table.border.top_t
+        )
     elseif variant == "between" then
-        return create_horizontal_line(widths, left_t, horizontal, right_t, cross)
+        return create_horizontal_line(
+            widths,
+            o.options.table.border.left_t,
+            o.options.table.border.horizontal,
+            o.options.table.border.right_t,
+            o.options.table.border.cross
+        )
     elseif variant == "bottom" then
-        return create_horizontal_line(widths, bottom_left, horizontal, bottom_right, bottom_t)
+        return create_horizontal_line(
+            widths,
+            o.options.table.border.bottom_left,
+            o.options.table.border.horizontal,
+            o.options.table.border.bottom_right,
+            o.options.table.border.bottom_t
+        )
     elseif variant == "header" then
-        return create_horizontal_line(widths, header_left_t, header_horizontal, header_right_t, header_cross)
+        return create_horizontal_line(
+            widths,
+            o.options.table.border.header_left_t,
+            o.options.table.border.header_horizontal,
+            o.options.table.border.header_right_t,
+            o.options.table.border.header_cross
+        )
     end
+
+    return ""
 end
 
-function table.draw_representation(
-    table,      -- [[ table ]]
-    options     -- [[ table ]] -- optional
-)
-    local options = options or {}
-    local min_width = options.min_width or DEFAULT_DRAW_REPRESENTATION_OPTIONS.min_width
-    local filler = options.filler or DEFAULT_DRAW_REPRESENTATION_OPTIONS.filler
-    local vertical = options.vertical or DEFAULT_DRAW_REPRESENTATION_OPTIONS.vertical
-
+---Draws a table representation for the preview
+---@param table table
+---@return table
+local function draw_representation(table)
     local representation = {}
 
-    local horizontal_divider = create_horizontal_divider(table, options)
+    local horizontal_divider = create_horizontal_divider(table, "between")
 
-    representation[#representation + 1] = create_horizontal_divider(table, { variant = "top" })
+    representation[#representation + 1] = create_horizontal_divider(table, "top")
 
-    local column_widths = table:get_widths_for_columns(min_width)
+    local column_widths = table:get_widths_for_columns()
 
     for i = 1, table:rows_amount() do
         local line = ""
+
         for j = 1, table:cols_amount() do
             local length = column_widths[j]
             local cell = table:value_at(i, j)
             local cell_width = vim.api.nvim_strwidth(cell)
 
             if cell_width < length then
-                cell = cell .. string.rep(filler, length - cell_width)
+                cell = cell
+                    .. string.rep(o.options.table.cell.filler, length - cell_width)
             end
 
-            cell = vertical .. cell
+            -- Add left vertical divider
+            cell = o.options.table.border.vertical .. cell
 
             -- Add most right vertical divider
             if j == table:cols_amount() then
-                cell = cell .. vertical
+                cell = cell .. o.options.table.border.vertical
             end
 
             line = line .. cell
@@ -122,25 +112,17 @@ function table.draw_representation(
         representation[#representation + 1] = line
 
         if i == 1 and table.header_enabled then
-            representation[#representation + 1] = create_horizontal_divider(table, { variant = "header" })
+            representation[#representation + 1] = create_horizontal_divider(table, "header")
         elseif i ~= table:rows_amount() then
             representation[#representation + 1] = horizontal_divider
         end
     end
 
-    representation[#representation + 1] = create_horizontal_divider(table, { variant = "bottom" })
+    representation[#representation + 1] = create_horizontal_divider(table, "bottom")
 
     return representation
 end
 
-function table.from_representation(representation, options)
-    local opts = options or {}
-
-    local table = {}
-
-    for i = 1, #representation do
-        local character = representation[i]
-    end
-end
-
-return table
+return {
+    draw_representation = draw_representation
+}

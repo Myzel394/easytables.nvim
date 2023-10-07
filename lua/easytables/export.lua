@@ -1,11 +1,20 @@
+local o = require("easytables.options")
+
 local M = {}
 
 ---comment
 ---@param content string
 ---@param width number
----@return table
+---@return string
 function M:export_cell(content, width)
-    return "| " .. content .. string.rep(" ", width - #content) .. " "
+    local padding = string.rep(" ", o.options.export.markdown.padding)
+
+    return
+        o.options.export.markdown.characters.vertical
+        .. padding
+        .. content
+        .. string.rep(" ", width - #content)
+        .. padding
 end
 
 ---Exports a line to a string
@@ -21,7 +30,7 @@ function M:export_line(line, widths)
         str = str .. self:export_cell(cell, width)
     end
 
-    return str .. "|"
+    return str .. o.options.export.markdown.characters.vertical
 end
 
 ---comment
@@ -32,10 +41,13 @@ function M:create_header_line(widths)
 
     -- No idea why, but "ipairs" is required otherwise lua complains
     for _, width in ipairs(widths) do
-        str = str .. "|" .. string.rep("-", width + 2)
+        str =
+            str
+            .. o.options.export.markdown.characters.vertical
+            .. string.rep(o.options.export.markdown.characters.horizontal, width)
     end
 
-    return str .. "|"
+    return str .. o.options.export.markdown.characters.vertical
 end
 
 ---comment

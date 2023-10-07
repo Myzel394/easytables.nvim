@@ -2,7 +2,7 @@ local string = require("string")
 
 ---Extracts the column info from the input
 ---@param raw_input string
----@return number, number
+---@return table
 local function extract_column_info(raw_input)
     local _, _, cols, create_singular, rows = string.find(raw_input, "(%d+)(x?)(%d*)")
 

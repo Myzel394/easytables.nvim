@@ -1,3 +1,5 @@
+local o = require("easytables.options")
+
 local M = {};
 
 function M:create(cols, rows)
@@ -14,7 +16,12 @@ function M:create(cols, rows)
         col = 1,
         row = 1,
     }
-    self.header_enabled = true
+
+    if rows > 1 then
+        self.header_enabled = o.options.table.header_enabled_by_default
+    else
+        self.header_enabled = false
+    end
 
     return self
 end
@@ -28,6 +35,11 @@ function M:value_at(row, col)
 end
 
 function M:toggle_header()
+    if #self.table == 1 then
+        error("Cannot toggle header if table has only one row")
+        return
+    end
+
     self.header_enabled = not self.header_enabled
 end
 
@@ -60,14 +72,17 @@ function M:get_largest_length()
     return largest
 end
 
-function M:get_widths_for_columns(
-    min_width --[[ int ]],
-    should_use_strwidth --[[ bool ]]
-) -- table
+---
+---@param should_use_strwidth boolean
+---@return table
+function M:get_widths_for_columns(should_use_strwidth)
     local widths = {}
 
     for i = 1, #self.table[1] do
-        widths[i] = math.max(min_width, self:get_largest_length_for_column(i, should_use_strwidth))
+        widths[i] = math.max(
+            o.options.table.cell.min_width,
+            self:get_largest_length_for_column(i, should_use_strwidth)
+        )
     end
 
     return widths
@@ -172,7 +187,7 @@ function M:move_highlight_down()
 end
 
 function M:get_cell_positions(col, row, widths)
-    local length = #"│"
+    local length = #o.options.table.border.vertical
     local start_position = 0
 
     for i, _ in ipairs(self.table[row]) do
@@ -193,50 +208,55 @@ function M:get_cell_positions(col, row, widths)
     return start_position, end_position
 end
 
-function M:get_horizontal_border_width(
-    col,            -- [[ int ]]
-    row,            -- [[ int ]]
-    min_value_width -- [[ int ]]
-)
-    local length = #"─"
+---
+---@param col boolean
+---@param row boolean
+---@return number, number
+function M:get_horizontal_border_width(col, row)
+    local length = #o.options.table.border.horizontal
     local start_position = 0
-    local widths = self:get_widths_for_columns(min_value_width, true)
+    local widths = self:get_widths_for_columns(true)
 
     for i, _ in ipairs(self.table[1]) do
         if i == col then
             break
         end
 
-        start_position = start_position + math.max(min_value_width, widths[i]) * length
+        start_position =
+            start_position
+            + math.max(o.options.table.cell.min_width, widths[i]) * length
 
         if row == 1 then
-            start_position = start_position + #"┬"
+            start_position = start_position + #o.options.table.border.top_t
         else
-            start_position = start_position + #"┼"
+            start_position = start_position + #o.options.table.border.cross
         end
     end
 
     local end_position = 0
 
     if col == 1 then
-        end_position = #"┬"
+        end_position = #o.options.table.border.top_t
     else
-        end_position = #"┤"
+        end_position = #o.options.table.border.right_t
     end
 
-    end_position = end_position + start_position + math.max(min_value_width, widths[col]) * length
+    end_position =
+        end_position
+        + start_position
+        + math.max(o.options.table.cell.min_width, widths[col]) * length
 
     if row == 1 then
         if col == 1 then
-            end_position = end_position + #"┬"
+            end_position = end_position + #o.options.table.border.top_t
         else
-            end_position = end_position + #"┐"
+            end_position = end_position + #o.options.table.border.top_right
         end
     else
         if col == 1 then
-            end_position = end_position + #"├"
+            end_position = end_position + #o.options.table.border.left_t
         else
-            end_position = end_position + #"┤"
+            end_position = end_position + #o.options.table.border.right_t
         end
     end
 

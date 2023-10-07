@@ -1,6 +1,8 @@
 -- All available options are listed below. The default values are shown.
-local DEFAULT = {
+local options = {
     table = {
+        -- Whether to enable the header by default
+        header_enabled_by_default = true,
         window = {
             preview_title = "Table Preview",
             prompt_title = "Cell content",
@@ -14,9 +16,6 @@ local DEFAULT = {
             -- Filler character for empty cells
             filler = " ",
             align = "left",
-            -- Padding around the cell content, applied BOTH left AND right
-            -- E.g: padding = 1, content = "foo" -> " foo "
-            padding = 1,
         },
         -- Characters used to draw the table
         -- Do not worry about multibyte characters, they are handled correctly
@@ -39,17 +38,28 @@ local DEFAULT = {
             header_horizontal = "═",
         }
     },
+    export = {
+        markdown = {
+            -- Padding around the cell content, applied BOTH left AND right
+            -- E.g: padding = 1, content = "foo" -> " foo "
+            padding = 1,
+            -- What markdown characters are used for the export, you probably
+            -- don't want to change these
+            characters = {
+                horizontal = "-",
+                vertical = "|",
+            }
+        }
+    }
 }
 
 -- You can ignore everything below this line
 
-local options = {}
-
-local function tableMerge(t1, t2)
+local function merge_tables(t1, t2)
     for k, v in pairs(t2) do
         if type(v) == "table" then
             if type(t1[k] or false) == "table" then
-                tableMerge(t1[k] or {}, t2[k] or {})
+                merge_tables(t1[k] or {}, t2[k] or {})
             else
                 t1[k] = v
             end
@@ -57,11 +67,10 @@ local function tableMerge(t1, t2)
             t1[k] = v
         end
     end
-    return t1
 end
 
 local function merge_options(user_options)
-    options = tableMerge(DEFAULT, user_options)
+    merge_tables(options, user_options)
 end
 
 return {
