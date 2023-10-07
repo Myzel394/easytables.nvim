@@ -235,4 +235,22 @@ function M:delete_row(row)
     self.header_enabled = #self.table > 1
 end
 
+function M:swap_cols(first, second)
+    for _, row in ipairs(self.table) do
+        local first_value = row[first]
+        local second_value = row[second]
+
+        row[first] = second_value
+        row[second] = first_value
+    end
+end
+
+function M:swap_rows(first, second)
+    local first_row = self.table[first]
+    local second_row = self.table[second]
+
+    self.table[first] = second_row
+    self.table[second] = first_row
+end
+
 return M

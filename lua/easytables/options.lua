@@ -126,6 +126,35 @@ local options = {
             ":JumpToPreviousCell<CR>",
             {}
         )
+
+        vim.api.nvim_buf_set_keymap(
+            buf,
+            "n",
+            "<C-Left>",
+            ":SwapWithLeftColumn<CR>",
+            {}
+        )
+        vim.api.nvim_buf_set_keymap(
+            buf,
+            "n",
+            "<C-Right>",
+            ":SwapWithRightColumn<CR>",
+            {}
+        )
+        vim.api.nvim_buf_set_keymap(
+            buf,
+            "n",
+            "<C-Up>",
+            ":SwapWithUpperRow<CR>",
+            {}
+        )
+        vim.api.nvim_buf_set_keymap(
+            buf,
+            "n",
+            "<C-Down>",
+            ":SwapWithLowerRow<CR>",
+            {}
+        )
     end
 }
 

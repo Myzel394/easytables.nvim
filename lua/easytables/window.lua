@@ -439,6 +439,59 @@ function M:register_listeners()
             self.table:swap_current_with_target(target)
             return target
         end,
+
+        SwapWithLeftColumn = function()
+            local cell = self.table:get_highlighted_cell()
+
+            self.table:swap_cols(
+                cell.col,
+                cell.col == 1 and self.table:cols_amount() or cell.col - 1
+            )
+
+            return {
+                row = cell.row,
+                col = cell.col == 1 and self.table:cols_amount() or cell.col - 1,
+            }
+        end,
+        SwapWithRightColumn = function()
+            local cell = self.table:get_highlighted_cell()
+
+            self.table:swap_cols(
+                cell.col,
+                cell.col == self.table:cols_amount() and 1 or cell.col + 1
+            )
+
+            return {
+                row = cell.row,
+                col = cell.col == self.table:cols_amount() and 1 or cell.col + 1,
+            }
+        end,
+        SwapWithUpperRow = function()
+            local cell = self.table:get_highlighted_cell()
+
+            self.table:swap_rows(
+                cell.row,
+                cell.row == 1 and self.table:rows_amount() or cell.row - 1
+            )
+
+            return {
+                row = cell.row == 1 and self.table:rows_amount() or cell.row - 1,
+                col = cell.col,
+            }
+        end,
+        SwapWithLowerRow = function()
+            local cell = self.table:get_highlighted_cell()
+
+            self.table:swap_rows(
+                cell.row,
+                cell.row == self.table:rows_amount() and 1 or cell.row + 1
+            )
+
+            return {
+                row = cell.row == self.table:rows_amount() and 1 or cell.row + 1,
+                col = cell.col,
+            }
+        end,
     }
 
     for cmd, func in pairs(cmds) do
