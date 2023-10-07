@@ -1,70 +1,43 @@
-local Input = require("nui.input")
-local event = require("nui.utils.autocmd").event
 local table = require("easytables.table")
 local window = require("easytables.window")
+local inputHelper = require("easytables.input")
 
-local function create_win()
+local function create_new_table(cols, rows)
+    local markdown_table = table:create(cols, rows)
+
+    local win = window:create(markdown_table)
+
+    win:show()
+    win:register_listeners()
+    win:draw_table()
 end
 
-local function show_table_builder(rows, cols)
-    create_win()
-end
+local function setup()
+    vim.api.nvim_create_user_command(
+        "EasyTablesCreateNew",
+        function(opt)
+            local input = opt.args
 
-local function get_size()
-    local dialog_input = Input({
-        position = "50%",
-        size = {
-            width = 60,
-        },
-        border = {
-            style = "single",
-            text = {
-                top = "[What's the size of your table?]",
-                top_align = "center",
-            },
-        },
-        win_options = {
-            winhighlight = "Normal:Normal,FloatBorder:Normal",
-        },
-    }, {
-        prompt = "> ",
-        default_value = "3x3",
-        on_submit = function(value)
-            _, _, rows, create_singular, cols = string.find(value, "(%d+)(x?)(%d*)")
+            local success, result = pcall(function() return inputHelper.extract_column_info(input) end)
 
-            if cols == "" then
-                if create_singular == "x" then
-                    cols = "1"
-                else
-                    cols = rows
-                end
+            if not success then
+                error("Don't know how to interpret this message. Please use a format like 3x4 or 3x or 4 or x5")
+                return
             end
 
-            rows = tonumber(rows)
-            cols = tonumber(cols)
+            -- tuple do not seem to be working with pcall
+            local cols = result[1]
+            local rows = result[2]
 
-            show_table_builder(rows, cols)
+            create_new_table(cols, rows)
         end,
-    })
-
-    dialog_input:mount()
-
-    dialog_input:on(event.BufLeave, function()
-        dialog_input:unmount()
-    end)
-end
-
-local function a()
-    local own_table = table:create(6, 3)
-
-    local window = window:create(own_table)
-
-    window:show()
-    window:draw_table()
-    window:register_listeners()
+        {
+            nargs = 1,
+            desc = "Create a new markdown table using EasyTables"
+        }
+    )
 end
 
 return {
-    a = a,
-    get_size = get_size,
+    setup = setup,
 }

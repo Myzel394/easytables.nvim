@@ -21,7 +21,7 @@ function M:create(table, options)
     self.height = options.height or DEFAULT_OPTIONS.height
     self.min_value_width = options.min_value_width or DEFAULT_OPTIONS.min_value_width
     self.table = table
-    self.previous_buffer = vim.api.nvim_get_current_buf()
+    self.previous_window = vim.api.nvim_get_current_win()
 
     return self
 end
@@ -48,7 +48,6 @@ function M:_open_preview_window()
         title_pos = "center",
     })
 
-    vim.api.nvim_set_option_value("readonly", true, { win = self.preview_window })
     -- Disable default highlight
     vim.api.nvim_set_option_value("winhighlight", "Normal:Normal",
         { win = self.preview_window })
@@ -148,8 +147,13 @@ function M:close()
     vim.api.nvim_win_close(self.preview_window, true)
     vim.api.nvim_win_close(self.prompt_window, true)
 
+    vim.api.nvim_set_current_win(self.previous_window)
+
     self.preview_window = nil
     self.prompt_window = nil
+    self.preview_buffer = nil
+    self.prompt_buffer = nil
+    self.previous_window = nil
 end
 
 function M:register_listeners()
@@ -320,21 +324,19 @@ function M:register_listeners()
         function()
             local markdown_table = export:export_table(self.table)
 
+            self:close()
+
             vim.schedule(function()
-                vim.cmd("bprevious")
+                local cursor = vim.api.nvim_win_get_cursor(0)
 
-                vim.schedule(function()
-                    local cursor = vim.api.nvim_win_get_cursor(0)
-
-                    vim.api.nvim_buf_set_text(
-                        0,
-                        cursor[1] - 1,
-                        cursor[2],
-                        cursor[1] - 1,
-                        cursor[2],
-                        markdown_table
-                    )
-                end)
+                vim.api.nvim_buf_set_text(
+                    0,
+                    cursor[1] - 1,
+                    cursor[2],
+                    cursor[1] - 1,
+                    cursor[2],
+                    markdown_table
+                )
             end)
         end,
         {}
