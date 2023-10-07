@@ -1,6 +1,7 @@
 local table = require("easytables.table")
 local window = require("easytables.window")
 local inputHelper = require("easytables.input")
+local optionsHelper = require("easytables.options")
 
 local function create_new_table(cols, rows)
     local markdown_table = table:create(cols, rows)
@@ -12,7 +13,11 @@ local function create_new_table(cols, rows)
     win:draw_table()
 end
 
-local function setup()
+---Initialize `easytables` with the given options. This function **must** be called.
+---@param options table See options.lua for available options
+local function setup(options)
+    optionsHelper.merge_options(options)
+
     vim.api.nvim_create_user_command(
         "EasyTablesCreateNew",
         function(opt)
