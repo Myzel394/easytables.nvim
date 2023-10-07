@@ -123,7 +123,7 @@ local options = {
             buf,
             "n",
             "<S-Tab>",
-            ":JumpToPrevCell<CR>",
+            ":JumpToPreviousCell<CR>",
             {}
         )
     end

@@ -220,11 +220,22 @@ function M:update_window()
 end
 
 function M:close()
-    vim.api.nvim_win_close(self.preview_window, true)
-    vim.api.nvim_win_close(self.prompt_window, true)
-
+    -- Wrap all in pcall to prevent errors when closing windows
+    pcall(function()
+        vim.api.nvim_win_close(self.preview_window, true)
+    end)
+    pcall(function()
+        vim.api.nvim_win_close(self.prompt_window, true)
+    end)
     pcall(function()
         vim.api.nvim_set_current_win(self.previous_window)
+    end)
+
+    pcall(function()
+        vim.api.nvim_buf_delete(self.preview_buffer, { force = true })
+    end)
+    pcall(function()
+        vim.api.nvim_buf_delete(self.prompt_buffer, { force = true })
     end)
 
     self.preview_window = nil
@@ -259,146 +270,194 @@ function M:register_listeners()
         }
     )
 
-    vim.api.nvim_buf_create_user_command(
-        self.prompt_buffer,
-        "JumpToNextCell",
-        function()
-            self.table:move_highlight_to_next_cell()
-            self:update_window()
-            self:_reset_prompt()
-        end,
-        {}
-    )
+    local cmds = {
+    }
 
-    vim.api.nvim_buf_create_user_command(
-        self.prompt_buffer,
-        "JumpToPreviousCell",
-        function()
-            self.table:move_highlight_to_previous_cell()
-            self:update_window()
-            self:_reset_prompt()
-        end,
-        {}
-    )
+    for cmd, func in pairs(cmds) do
+        vim.api.nvim_buf_create_user_command(
+            self.prompt_buffer,
+            cmd,
+            function()
+                func()
+                self:update_window()
+                self:_reset_prompt()
+            end,
+            {}
+        )
+    end
 
-    vim.api.nvim_buf_create_user_command(
-        self.prompt_buffer,
-        "JumpDown",
-        function()
-            self.table:move_highlight_down()
-            self:update_window()
-            self:_reset_prompt()
-        end,
-        {}
-    )
+    local cmds = {
+        JumpToNextCell = function()
+            local cell = self.table:get_highlighted_cell()
 
-    vim.api.nvim_buf_create_user_command(
-        self.prompt_buffer,
-        "JumpUp",
-        function()
-            self.table:move_highlight_up()
-            self:update_window()
-            self:_reset_prompt()
-        end,
-        {}
-    )
+            if cell.col == self.table:cols_amount() then
+                if cell.row == self.table:rows_amount() then
+                    -- Reset highlight to the first cell
+                    return {
+                        col = 1,
+                        row = 1,
+                    }
+                else
+                    return {
+                        col = 1,
+                        row = cell.row + 1,
+                    }
+                end
+            end
 
-    vim.api.nvim_buf_create_user_command(
-        self.prompt_buffer,
-        "JumpLeft",
-        function()
-            self.table:move_highlight_left()
-            self:update_window()
-            self:_reset_prompt()
-        end,
-        {}
-    )
-
-    vim.api.nvim_buf_create_user_command(
-        self.prompt_buffer,
-        "JumpRight",
-        function()
-            self.table:move_highlight_right()
-            self:update_window()
-            self:_reset_prompt()
-        end,
-        {}
-    )
-
-    vim.api.nvim_buf_create_user_command(
-        self.prompt_buffer,
-        "SwapWithRightCell",
-        function()
-            local current_cell = self.table:get_highlighted_cell()
-
-            local right_cell = {
-                row = current_cell.row,
-                col = current_cell.col == self.table:cols_amount() and 1 or current_cell.col + 1,
+            return {
+                col = cell.col + 1,
+                row = cell.row
             }
-            self.table:swap_contents(current_cell, right_cell)
-            self:_update_active_cell(right_cell)
-            self:update_window()
-            self:_reset_prompt()
         end,
-        {}
-    )
+        JumpToPreviousCell = function()
+            local cell = self.table:get_highlighted_cell()
 
-    vim.api.nvim_buf_create_user_command(
-        self.prompt_buffer,
-        "SwapWithLeftCell",
-        function()
-            local current_cell = self.table:get_highlighted_cell()
+            if cell.col == 1 then
+                if cell.row == 1 then
+                    -- Reset highlight to the last cell
+                    return {
+                        col = self.table:cols_amount(),
+                        row = self.table:rows_amount(),
+                    }
+                else
+                    return {
+                        col = self.table:cols_amount(),
+                        row = cell.row - 1,
+                    }
+                end
+            end
 
-            local left_cell = {
-                row = current_cell.row,
-                col = current_cell.col == 1 and self.table:cols_amount() or current_cell.col - 1,
+            return {
+                col = cell.col - 1,
+                row = cell.row,
             }
-            self.table:swap_contents(current_cell, left_cell)
-            self.table:_update_active_cell(left_cell)
-            self:update_window()
-            self:draw_table()
-            self:_reset_prompt()
         end,
-        {}
-    )
 
-    vim.api.nvim_buf_create_user_command(
-        self.prompt_buffer,
-        "SwapWithUpperCell",
-        function()
-            local current_cell = self.table:get_highlighted_cell()
+        JumpDown = function()
+            local cell = self.table:get_highlighted_cell()
 
-            local upper_cell = {
-                row = current_cell.row == 1 and self.table:rows_amount() or current_cell.row - 1,
-                col = current_cell.col,
+            return {
+                row = cell.row == self.table:rows_amount() and 1 or cell.row + 1,
+                col = cell.col,
             }
-            self.table:swap_contents(current_cell, upper_cell)
-            self.table:_update_active_cell(upper_cell)
-            self:update_window()
-            self:draw_table()
-            self:_reset_prompt()
         end,
-        {}
-    )
+        JumpUp = function()
+            local cell = self.table:get_highlighted_cell()
 
-    vim.api.nvim_buf_create_user_command(
-        self.prompt_buffer,
-        "SwapWithLowerCell",
-        function()
-            local current_cell = self.table:get_highlighted_cell()
-
-            local lower_cell = {
-                row = current_cell.row == self.table:rows_amount() and 1 or current_cell.row + 1,
-                col = current_cell.col,
+            return {
+                row = cell.row == 1 and self.table:rows_amount() or cell.row - 1,
+                col = cell.col,
             }
-            self.table:swap_contents(current_cell, lower_cell)
-            self.table:_update_active_cell(lower_cell)
-            self:update_window()
-            self:draw_table()
-            self:_reset_prompt()
         end,
-        {}
-    )
+        JumpLeft = function()
+            local cell = self.table:get_highlighted_cell()
+
+            return {
+                row = cell.row,
+                col = cell.col == 1 and self.table:cols_amount() or cell.col - 1,
+            }
+        end,
+        JumpRight = function()
+            local cell = self.table:get_highlighted_cell()
+
+            return {
+                row = cell.row,
+                col = cell.col == self.table:cols_amount() and 1 or cell.col + 1,
+            }
+        end,
+
+        DeleteColumn = function() self.table:delete_col(self.table:get_highlighted_cell().col) end,
+        DeleteRow = function() self.table:delete_row(self.table:get_highlighted_cell().row) end,
+
+        InsertColumnRight = function()
+            self.table:insert_col(self.table:get_highlighted_cell().col)
+            return {
+                row = self.table:get_highlighted_cell().row,
+                col = self.table:get_highlighted_cell().col + 1,
+            }
+        end,
+        InsertColumnLeft = function()
+            self.table:insert_col(self.table:get_highlighted_cell().col - 1)
+            return {
+                row = self.table:get_highlighted_cell().row,
+                col = self.table:get_highlighted_cell().col,
+            }
+        end,
+        InsertRowBelow = function()
+            self.table:insert_row(self.table:get_highlighted_cell().row)
+            return {
+                row = self.table:get_highlighted_cell().row + 1,
+                col = self.table:get_highlighted_cell().col,
+            }
+        end,
+        InsertRowAbove = function()
+            self.table:insert_row(self.table:get_highlighted_cell().row - 1)
+            return {
+                row = self.table:get_highlighted_cell().row,
+                col = self.table:get_highlighted_cell().col,
+            }
+        end,
+
+        SwapWithRightCell = function()
+            local cell = self.table:get_highlighted_cell()
+
+            local target = {
+                row = cell.row,
+                col = cell.col == self.table:cols_amount() and 1 or cell.col + 1,
+            }
+            self.table:swap_current_with_target(target)
+            return target
+        end,
+        SwapWithLeftCell = function()
+            local cell = self.table:get_highlighted_cell()
+
+            local target = {
+                row = cell.row,
+                col = cell.col == 1 and self.table:cols_amount() or cell.col - 1,
+            }
+            self.table:swap_current_with_target(target)
+            return target
+        end,
+        SwapWithUpperCell = function()
+            local cell = self.table:get_highlighted_cell()
+
+            local target = {
+                row = cell.row == 1 and self.table:rows_amount() or cell.row - 1,
+                col = cell.col,
+            }
+            self.table:swap_current_with_target(target)
+            return target
+        end,
+        SwapWithLowerCell = function()
+            local cell = self.table:get_highlighted_cell()
+
+            local target = {
+                row = cell.row == self.table:rows_amount() and 1 or cell.row + 1,
+                col = cell.col,
+            }
+            self.table:swap_current_with_target(target)
+            return target
+        end,
+    }
+
+    for cmd, func in pairs(cmds) do
+        vim.api.nvim_buf_create_user_command(
+            self.prompt_buffer,
+            cmd,
+            function()
+                local new_cell = func()
+
+                if new_cell ~= nil then
+                    self:_update_active_cell(new_cell)
+                end
+
+                self:update_window()
+                self:_reset_prompt()
+            end,
+            {}
+        )
+    end
 
     vim.api.nvim_buf_create_user_command(
         self.prompt_buffer,

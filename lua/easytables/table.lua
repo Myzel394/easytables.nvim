@@ -104,88 +104,6 @@ function M:get_highlighted_cell()
     return self.highlighted_cell
 end
 
--- Jumps to next cell in row. If there is no next cell, it jumps to the first cell in the next row.
-function M:move_highlight_to_next_cell()
-    if self.highlighted_cell.col == self:cols_amount() then
-        if self.highlighted_cell.row == self:rows_amount() then
-            -- Reset highlight to the first cell
-            self.highlighted_cell = {
-                col = 1,
-                row = 1,
-            }
-        else
-            self.highlighted_cell = {
-                col = 1,
-                row = self.highlighted_cell.row + 1,
-            }
-        end
-    else
-        self.highlighted_cell = {
-            col = self.highlighted_cell.col + 1,
-            row = self.highlighted_cell.row,
-        }
-    end
-end
-
--- Jumps to previous cell in row. If there is no previous cell, it jumps to the last cell in the previous row.
-function M:move_highlight_to_previous_cell()
-    if self.highlighted_cell.col == 1 then
-        if self.highlighted_cell.row == 1 then
-            -- Reset highlight to the last cell
-            self.highlighted_cell = {
-                col = self:cols_amount(),
-                row = self:rows_amount(),
-            }
-        else
-            self.highlighted_cell = {
-                col = self:cols_amount(),
-                row = self.highlighted_cell.row - 1,
-            }
-        end
-    else
-        self.highlighted_cell = {
-            col = self.highlighted_cell.col - 1,
-            row = self.highlighted_cell.row,
-        }
-    end
-end
-
--- Moves highlight to the right, jumps back to the first cell in the same row if it is already at the rightmost cell.
-function M:move_highlight_right()
-    if self.highlighted_cell.col == self:cols_amount() then
-        self.highlighted_cell.col = 1
-    else
-        self.highlighted_cell.col = self.highlighted_cell.col + 1
-    end
-end
-
--- Moves highlight to the left, jumps back to the last cell in the same row if it is already at the leftmost cell.
-function M:move_highlight_left()
-    if self.highlighted_cell.col == 1 then
-        self.highlighted_cell.col = self:cols_amount()
-    else
-        self.highlighted_cell.col = self.highlighted_cell.col - 1
-    end
-end
-
--- Moves highlight to the top, jumps back to the last row if it is already at the topmost row.
-function M:move_highlight_up()
-    if self.highlighted_cell.row == 1 then
-        self.highlighted_cell.row = self:rows_amount()
-    else
-        self.highlighted_cell.row = self.highlighted_cell.row - 1
-    end
-end
-
--- Moves highlight to the bottom, jumps back to the first row if it is already at the bottommost row.
-function M:move_highlight_down()
-    if self.highlighted_cell.row == self:rows_amount() then
-        self.highlighted_cell.row = 1
-    else
-        self.highlighted_cell.row = self.highlighted_cell.row + 1
-    end
-end
-
 function M:get_cell_positions(col, row, widths)
     local length = #o.options.table.border.vertical
     local start_position = 0
@@ -269,6 +187,52 @@ function M:swap_contents(first, second)
 
     self:insert(first.col, first.row, second_value)
     self:insert(second.col, second.row, first_value)
+end
+
+function M:swap_current_with_target(target)
+    self:swap_contents(self:get_highlighted_cell(), target)
+end
+
+---Inserts a new empty row at the given index (zero based)
+---Example: 0 would insert a new row at the top of the table
+---Example: 1 would insert a new row at the second position of the table
+---Example: length of table would insert a new row at the bottom of the table
+function M:insert_row(index)
+    local row = {}
+    for i = 1, self:cols_amount() do
+        row[i] = ""
+    end
+
+    table.insert(self.table, index + 1, row)
+end
+
+---Inserts a new empty column at the given index (zero based)
+function M:insert_col(index)
+    for _, row in ipairs(self.table) do
+        table.insert(row, index + 1, "")
+    end
+end
+
+function M:delete_col(col)
+    if (#self.table[1] == 1) then
+        error("Cannot delete last column")
+        return
+    end
+
+    for _, row in ipairs(self.table) do
+        table.remove(row, col)
+    end
+end
+
+function M:delete_row(row)
+    if (#self.table == 1) then
+        error("Cannot delete last row")
+        return
+    end
+
+    table.remove(self.table, row)
+
+    self.header_enabled = #self.table > 1
 end
 
 return M
