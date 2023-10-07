@@ -5,15 +5,7 @@ local math = require("math")
 
 local M = {}
 
-local function get_window_size(cols, rows)
-    local option_value = o.options.table.window.size
-
-    if option_value ~= "auto" then
-        local width, height = option_value:match("(%d+)x(%d+)")
-
-        return tonumber(width), tonumber(height)
-    end
-
+local function _get_auto_size(cols, rows)
     local width =
     -- Border widths
         (1 + cols)
@@ -26,6 +18,18 @@ local function get_window_size(cols, rows)
     return width, height
 end
 
+local function get_window_size(cols, rows)
+    local option_value = o.options.table.window.size
+
+    if option_value ~= "auto" then
+        local width, height = option_value:match("(%d+)x(%d+)")
+
+        return tonumber(width), tonumber(height)
+    end
+
+    return _get_auto_size(cols, rows)
+end
+
 function M:create(table, options)
     options = options or {}
 
@@ -35,12 +39,20 @@ function M:create(table, options)
     return self
 end
 
-function M:get_x()
-    local width, _ = get_window_size(self.table:cols_amount(), self.table:rows_amount())
-    local diff = vim.o.columns - vim.api.nvim_win_get_width(self.previous_window)
-    local pos = vim.o.columns - width - diff
+function M:get_table_width()
+    local widths = self.table:get_widths_for_columns()
+    local width = 1
 
-    return math.floor(pos / 2)
+    for _, w in ipairs(widths) do
+        width = width + w + 1
+    end
+
+    return width
+end
+
+function M:get_x()
+    local width, _ = self:get_table_width()
+    return math.floor((vim.o.columns - width) / 2)
 end
 
 function M:get_y()
@@ -49,21 +61,50 @@ function M:get_y()
     return math.floor(((vim.o.lines - height) / 2) - 1)
 end
 
-function M:_open_preview_window()
-    local width, height = get_window_size(self.table:cols_amount(), self.table:rows_amount())
+function M:_set_window_positions()
+    local width = self:get_table_width()
+    local _, height = get_window_size(self.table:cols_amount(), self.table:rows_amount())
 
-    self.preview_buffer = vim.api.nvim_create_buf(false, true)
-    self.preview_window = vim.api.nvim_open_win(self.preview_buffer, false, {
-        relative = "win",
-        col = self:get_x(),
-        row = self:get_y(),
+    print("updating", vim.inspect(width), vim.inspect(height))
+
+    vim.api.nvim_win_set_config(self.preview_window, {
         width = width,
         height = height,
+        col = self:get_x(),
+        row = self:get_y(),
+        relative = "editor"
+    })
+    vim.api.nvim_win_set_config(self.prompt_window, {
+        width = width,
+        height = 1,
+        col = self:get_x(),
+        row = self:get_y() + height + 2,
+        relative = "editor"
+    })
+end
+
+function M:_update_active_cell(cell)
+    self.table:set_highlighted_cell(cell)
+
+    self:draw_table()
+
+    vim.api.nvim_buf_set_name(self.prompt_buffer, "[Table Cell: " .. cell.row .. "x" .. cell.col .. "]")
+end
+
+function M:_open_preview_window()
+    self.preview_buffer = vim.api.nvim_create_buf(false, true)
+    self.preview_window = vim.api.nvim_open_win(self.preview_buffer, false, {
         style = "minimal",
         border = "rounded",
         title = o.options.table.window.preview_title,
         title_pos = "center",
         focusable = false,
+        -- Required for function, will be overwritten by :_set_window_positions`
+        relative = "editor",
+        row = 0,
+        col = 0,
+        width = 1,
+        height = 1
     })
 
     -- Disable default highlight
@@ -80,20 +121,19 @@ function M:_open_preview_window()
 end
 
 function M:_open_prompt_window()
-    local width, preview_height = get_window_size(self.table:cols_amount(), self.table:rows_amount())
-
     self.prompt_buffer = vim.api.nvim_create_buf(false, false)
     self.prompt_window = vim.api.nvim_open_win(self.prompt_buffer, true, {
-        relative = "win",
         -- No idea why, but the window is shifted one cell to the right by default
-        col = self:get_x(),
-        row = self:get_y() + preview_height + 2,
-        width = width,
-        height = 2,
         style = "minimal",
         border = "rounded",
         title = o.options.table.window.prompt_title,
         title_pos = "center",
+        -- Required for function, will be overwritten by :_set_window_positions`
+        relative = "editor",
+        col = 0,
+        row = 0,
+        width = 1,
+        height = 1
     })
 
     vim.api.nvim_set_option_value('winhighlight', "Normal:Normal", { win = self.prompt_window })
@@ -107,6 +147,7 @@ function M:show()
 
     self:_open_preview_window()
     self:_open_prompt_window()
+    self:_set_window_positions()
 end
 
 function M:_reset_prompt()
@@ -125,7 +166,7 @@ function M:_draw_highlight()
     end
 
     local row = 1 + math.max(0, cell.row - 1) * 2
-    local widths = self.table:get_widths_for_columns(self.min_value_width)
+    local widths = self.table:get_widths_for_columns()
     local cell_start, cell_end = self.table:get_cell_positions(cell.col, cell.row, widths)
     local border_start, border_end = self.table:get_horizontal_border_width(cell.col, cell.row, self.min_value_width)
 
@@ -172,6 +213,12 @@ function M:draw_table()
     self:_draw_highlight()
 end
 
+function M:update_window()
+    if o.options.table.window.size == "auto" then
+        self:_set_window_positions()
+    end
+end
+
 function M:close()
     vim.api.nvim_win_close(self.preview_window, true)
     vim.api.nvim_win_close(self.prompt_window, true)
@@ -197,6 +244,7 @@ function M:register_listeners()
 
                 self.table:insert(selected_cell.col, selected_cell.row, lines[1])
                 self:draw_table()
+                self:update_window()
             end)
         end,
     })
@@ -216,7 +264,7 @@ function M:register_listeners()
         "JumpToNextCell",
         function()
             self.table:move_highlight_to_next_cell()
-            self:draw_table()
+            self:update_window()
             self:_reset_prompt()
         end,
         {}
@@ -227,7 +275,7 @@ function M:register_listeners()
         "JumpToPreviousCell",
         function()
             self.table:move_highlight_to_previous_cell()
-            self:draw_table()
+            self:update_window()
             self:_reset_prompt()
         end,
         {}
@@ -238,7 +286,7 @@ function M:register_listeners()
         "JumpDown",
         function()
             self.table:move_highlight_down()
-            self:draw_table()
+            self:update_window()
             self:_reset_prompt()
         end,
         {}
@@ -249,7 +297,7 @@ function M:register_listeners()
         "JumpUp",
         function()
             self.table:move_highlight_up()
-            self:draw_table()
+            self:update_window()
             self:_reset_prompt()
         end,
         {}
@@ -260,7 +308,7 @@ function M:register_listeners()
         "JumpLeft",
         function()
             self.table:move_highlight_left()
-            self:draw_table()
+            self:update_window()
             self:_reset_prompt()
         end,
         {}
@@ -271,7 +319,7 @@ function M:register_listeners()
         "JumpRight",
         function()
             self.table:move_highlight_right()
-            self:draw_table()
+            self:update_window()
             self:_reset_prompt()
         end,
         {}
@@ -288,8 +336,8 @@ function M:register_listeners()
                 col = current_cell.col == self.table:cols_amount() and 1 or current_cell.col + 1,
             }
             self.table:swap_contents(current_cell, right_cell)
-            self.table:set_highlighted_cell(right_cell)
-            self:draw_table()
+            self:_update_active_cell(right_cell)
+            self:update_window()
             self:_reset_prompt()
         end,
         {}
@@ -306,7 +354,8 @@ function M:register_listeners()
                 col = current_cell.col == 1 and self.table:cols_amount() or current_cell.col - 1,
             }
             self.table:swap_contents(current_cell, left_cell)
-            self.table:set_highlighted_cell(left_cell)
+            self.table:_update_active_cell(left_cell)
+            self:update_window()
             self:draw_table()
             self:_reset_prompt()
         end,
@@ -324,7 +373,8 @@ function M:register_listeners()
                 col = current_cell.col,
             }
             self.table:swap_contents(current_cell, upper_cell)
-            self.table:set_highlighted_cell(upper_cell)
+            self.table:_update_active_cell(upper_cell)
+            self:update_window()
             self:draw_table()
             self:_reset_prompt()
         end,
@@ -342,7 +392,8 @@ function M:register_listeners()
                 col = current_cell.col,
             }
             self.table:swap_contents(current_cell, lower_cell)
-            self.table:set_highlighted_cell(lower_cell)
+            self.table:_update_active_cell(lower_cell)
+            self:update_window()
             self:draw_table()
             self:_reset_prompt()
         end,
@@ -354,6 +405,7 @@ function M:register_listeners()
         "ToggleHeader",
         function()
             self.table:toggle_header()
+            self:update_window()
             self:draw_table()
         end,
         {}
