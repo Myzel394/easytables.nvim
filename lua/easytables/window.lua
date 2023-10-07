@@ -173,6 +173,7 @@ function M:register_listeners()
     vim.api.nvim_create_autocmd(
         { "QuitPre" },
         {
+            buffer = self.prompt_buffer,
             callback = function()
                 self:close()
             end
