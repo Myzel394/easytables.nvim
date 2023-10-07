@@ -7,7 +7,7 @@ local M = {}
 ---@param width number
 ---@return string
 function M:export_cell(content, width)
-    local padding = string.rep(" ", o.options.export.markdown.padding)
+    local padding = string.rep(o.options.export.markdown.characters.filler, o.options.export.markdown.padding)
 
     return
         o.options.export.markdown.characters.vertical
@@ -44,7 +44,7 @@ function M:create_header_line(widths)
         str =
             str
             .. o.options.export.markdown.characters.vertical
-            .. string.rep(o.options.export.markdown.characters.horizontal, width)
+            .. string.rep(o.options.export.markdown.characters.horizontal, width + o.options.export.markdown.padding * 2)
     end
 
     return str .. o.options.export.markdown.characters.vertical

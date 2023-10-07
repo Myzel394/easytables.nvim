@@ -48,6 +48,8 @@ local options = {
             characters = {
                 horizontal = "-",
                 vertical = "|",
+                -- Filler for padding
+                filler = " "
             }
         }
     },
