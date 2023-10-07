@@ -5,6 +5,27 @@ local math = require("math")
 
 local M = {}
 
+local function get_window_size(cols, rows)
+    local option_value = o.options.table.window.size
+
+    if option_value ~= "auto" then
+        local width, height = option_value:match("(%d+)x(%d+)")
+
+        return tonumber(width), tonumber(height)
+    end
+
+    local width =
+    -- Border widths
+        (1 + cols)
+        -- Cell widths
+        + (cols * o.options.table.cell.min_width)
+    local height =
+        (1 + rows)
+        + rows
+
+    return width, height
+end
+
 function M:create(table, options)
     options = options or {}
 
@@ -14,38 +35,35 @@ function M:create(table, options)
     return self
 end
 
-function M:_get_width()
-    return 60
-end
-
-function M:_get_preview_height()
-    return 20
-end
-
 function M:get_x()
+    local width, _ = get_window_size(self.table:cols_amount(), self.table:rows_amount())
     local diff = vim.o.columns - vim.api.nvim_win_get_width(self.previous_window)
-    local pos = vim.o.columns - self:_get_width() - diff
+    local pos = vim.o.columns - width - diff
 
     return math.floor(pos / 2)
 end
 
 function M:get_y()
-    return math.floor(((vim.o.lines - self:_get_preview_height()) / 2) - 1)
+    local _, height = get_window_size(self.table:cols_amount(), self.table:rows_amount())
+
+    return math.floor(((vim.o.lines - height) / 2) - 1)
 end
 
 function M:_open_preview_window()
+    local width, height = get_window_size(self.table:cols_amount(), self.table:rows_amount())
+
     self.preview_buffer = vim.api.nvim_create_buf(false, true)
     self.preview_window = vim.api.nvim_open_win(self.preview_buffer, false, {
         relative = "win",
         col = self:get_x(),
         row = self:get_y(),
-        width = self:_get_width(),
-        height = self:_get_preview_height(),
+        width = width,
+        height = height,
         style = "minimal",
         border = "rounded",
         title = o.options.table.window.preview_title,
         title_pos = "center",
-        focusable = false
+        focusable = false,
     })
 
     -- Disable default highlight
@@ -54,16 +72,23 @@ function M:_open_preview_window()
         "Normal:Normal",
         { win = self.preview_window }
     )
+    vim.api.nvim_set_option_value(
+        "wrap",
+        false,
+        { win = self.preview_window }
+    )
 end
 
 function M:_open_prompt_window()
+    local width, preview_height = get_window_size(self.table:cols_amount(), self.table:rows_amount())
+
     self.prompt_buffer = vim.api.nvim_create_buf(false, false)
     self.prompt_window = vim.api.nvim_open_win(self.prompt_buffer, true, {
         relative = "win",
         -- No idea why, but the window is shifted one cell to the right by default
         col = self:get_x(),
-        row = self:get_y() + self:_get_preview_height() + 2,
-        width = self:_get_width(),
+        row = self:get_y() + preview_height + 2,
+        width = width,
         height = 2,
         style = "minimal",
         border = "rounded",
