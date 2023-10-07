@@ -382,6 +382,8 @@ function M:register_listeners()
         end,
         {}
     )
+
+    o.options.set_mappings(self.prompt_buffer)
 end
 
 return M

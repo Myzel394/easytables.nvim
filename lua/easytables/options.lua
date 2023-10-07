@@ -50,7 +50,83 @@ local options = {
                 vertical = "|",
             }
         }
-    }
+    },
+    set_mappings = function(buf)
+        vim.api.nvim_buf_set_keymap(
+            buf,
+            "n",
+            "<Left>",
+            ":JumpLeft<CR>",
+            {}
+        )
+        vim.api.nvim_buf_set_keymap(
+            buf,
+            "n",
+            "<S-Left>",
+            ":SwapWithLeftCell<CR>",
+            {}
+        )
+
+        vim.api.nvim_buf_set_keymap(
+            buf,
+            "n",
+            "<Right>",
+            ":JumpRight<CR>",
+            {}
+        )
+        vim.api.nvim_buf_set_keymap(
+            buf,
+            "n",
+            "<S-Right>",
+            ":SwapWithRightCell<CR>",
+            {}
+        )
+
+        vim.api.nvim_buf_set_keymap(
+            buf,
+            "n",
+            "<Up>",
+            ":JumpUp<CR>",
+            {}
+        )
+        vim.api.nvim_buf_set_keymap(
+            buf,
+            "n",
+            "<S-Up>",
+            ":SwapWithUpperCell<CR>",
+            {}
+        )
+
+        vim.api.nvim_buf_set_keymap(
+            buf,
+            "n",
+            "<Down>",
+            ":JumpDown<CR>",
+            {}
+        )
+        vim.api.nvim_buf_set_keymap(
+            buf,
+            "n",
+            "<S-Down>",
+            ":SwapWithLowerCell<CR>",
+            {}
+        )
+
+        vim.api.nvim_buf_set_keymap(
+            buf,
+            "n",
+            "<Tab>",
+            ":JumpToNextCell<CR>",
+            {}
+        )
+        vim.api.nvim_buf_set_keymap(
+            buf,
+            "n",
+            "<S-Tab>",
+            ":JumpToPrevCell<CR>",
+            {}
+        )
+    end
 }
 
 -- You can ignore everything below this line
