@@ -170,6 +170,15 @@ function M:register_listeners()
         end,
     })
 
+    vim.api.nvim_create_autocmd(
+        { "QuitPre" },
+        {
+            callback = function()
+                self:close()
+            end
+        }
+    )
+
     vim.api.nvim_buf_create_user_command(
         self.prompt_buffer,
         "JumpToNextCell",
