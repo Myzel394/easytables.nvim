@@ -23,7 +23,10 @@ function M:_get_preview_height()
 end
 
 function M:get_x()
-    return math.floor((vim.o.columns - self:_get_width()) / 2)
+    local diff = vim.o.columns - vim.api.nvim_win_get_width(self.previous_window)
+    local pos = vim.o.columns - self:_get_width() - diff
+
+    return math.floor(pos / 2)
 end
 
 function M:get_y()
@@ -32,7 +35,7 @@ end
 
 function M:_open_preview_window()
     self.preview_buffer = vim.api.nvim_create_buf(false, true)
-    self.preview_window = vim.api.nvim_open_win(self.preview_buffer, true, {
+    self.preview_window = vim.api.nvim_open_win(self.preview_buffer, false, {
         relative = "win",
         col = self:get_x(),
         row = self:get_y(),
@@ -42,6 +45,7 @@ function M:_open_preview_window()
         border = "rounded",
         title = o.options.table.window.preview_title,
         title_pos = "center",
+        focusable = false
     })
 
     -- Disable default highlight
@@ -57,7 +61,7 @@ function M:_open_prompt_window()
     self.prompt_window = vim.api.nvim_open_win(self.prompt_buffer, true, {
         relative = "win",
         -- No idea why, but the window is shifted one cell to the right by default
-        col = self:get_x() - 1,
+        col = self:get_x(),
         row = self:get_y() + self:_get_preview_height() + 2,
         width = self:_get_width(),
         height = 2,
