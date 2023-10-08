@@ -87,7 +87,7 @@ local function extract_table(
             table[#table + 1] = {}
 
             for content in string.gmatch(line, "[^" .. o.options.export.markdown.characters.vertical .. "]+") do
-                table[#table][#table[#table] + 1] = content
+                table[#table][#table[#table] + 1] = string.gsub(content, '^%s*(.-)%s*$', '%1')
             end
         end
     end

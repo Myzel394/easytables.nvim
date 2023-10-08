@@ -58,10 +58,7 @@ local function setup(options)
                 return
             end
 
-            print(vim.inspect(start_row), vim.inspect(end_row))
-
             local raw_table = import.extract_table(buffer, start_row, end_row)
-            print(vim.inspect(raw_table))
 
             local markdown_table = table:import(raw_table)
 
