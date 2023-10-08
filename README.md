@@ -6,10 +6,9 @@
 
 </div>
 
-[Video preview of easytables](https://github.com/Myzel394/easytables.nvim/assets/50424412/66298556-be6d-4bc8-ba42-ec14c6379f90)
+[Preview of usage of easytables](https://github.com/Myzel394/easytables.nvim/assets/50424412/d8bcb0c2-9b8b-468a-b1a8-f0032543f1e9)
 
-
-** Please note that this is a work in progress. **
+**Please note that this is a work in progress.**
 
 ## Features
 
