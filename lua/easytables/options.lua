@@ -59,14 +59,18 @@ local options = {
             "n",
             "<Left>",
             ":JumpLeft<CR>",
-            {}
+            {
+                silent = true,
+            }
         )
         vim.api.nvim_buf_set_keymap(
             buf,
             "n",
             "<S-Left>",
             ":SwapWithLeftCell<CR>",
-            {}
+            {
+                silent = true,
+            }
         )
 
         vim.api.nvim_buf_set_keymap(
@@ -74,14 +78,18 @@ local options = {
             "n",
             "<Right>",
             ":JumpRight<CR>",
-            {}
+            {
+                silent = true,
+            }
         )
         vim.api.nvim_buf_set_keymap(
             buf,
             "n",
             "<S-Right>",
             ":SwapWithRightCell<CR>",
-            {}
+            {
+                silent = true,
+            }
         )
 
         vim.api.nvim_buf_set_keymap(
@@ -89,14 +97,18 @@ local options = {
             "n",
             "<Up>",
             ":JumpUp<CR>",
-            {}
+            {
+                silent = true,
+            }
         )
         vim.api.nvim_buf_set_keymap(
             buf,
             "n",
             "<S-Up>",
             ":SwapWithUpperCell<CR>",
-            {}
+            {
+                silent = true,
+            }
         )
 
         vim.api.nvim_buf_set_keymap(
@@ -104,14 +116,18 @@ local options = {
             "n",
             "<Down>",
             ":JumpDown<CR>",
-            {}
+            {
+                silent = true,
+            }
         )
         vim.api.nvim_buf_set_keymap(
             buf,
             "n",
             "<S-Down>",
             ":SwapWithLowerCell<CR>",
-            {}
+            {
+                silent = true,
+            }
         )
 
         vim.api.nvim_buf_set_keymap(
@@ -119,14 +135,18 @@ local options = {
             "n",
             "<Tab>",
             ":JumpToNextCell<CR>",
-            {}
+            {
+                silent = true,
+            }
         )
         vim.api.nvim_buf_set_keymap(
             buf,
             "n",
             "<S-Tab>",
             ":JumpToPreviousCell<CR>",
-            {}
+            {
+                silent = true,
+            }
         )
 
         vim.api.nvim_buf_set_keymap(
@@ -134,28 +154,36 @@ local options = {
             "n",
             "<C-Left>",
             ":SwapWithLeftColumn<CR>",
-            {}
+            {
+                silent = true,
+            }
         )
         vim.api.nvim_buf_set_keymap(
             buf,
             "n",
             "<C-Right>",
             ":SwapWithRightColumn<CR>",
-            {}
+            {
+                silent = true,
+            }
         )
         vim.api.nvim_buf_set_keymap(
             buf,
             "n",
             "<C-Up>",
             ":SwapWithUpperRow<CR>",
-            {}
+            {
+                silent = true,
+            }
         )
         vim.api.nvim_buf_set_keymap(
             buf,
             "n",
             "<C-Down>",
             ":SwapWithLowerRow<CR>",
-            {}
+            {
+                silent = true,
+            }
         )
     end
 }
