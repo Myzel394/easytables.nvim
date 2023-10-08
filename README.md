@@ -6,7 +6,8 @@
 
 </div>
 
-[![Video preview of easytables]](readme_content/preview.webm)
+[Video preview of easytables](https://github.com/Myzel394/easytables.nvim/assets/50424412/66298556-be6d-4bc8-ba42-ec14c6379f90)
+
 
 ** Please note that this is a work in progress. **
 
