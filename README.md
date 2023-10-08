@@ -234,7 +234,7 @@ This is the default configuration:
 
 ## Limitations
 
-* This plugin currently does not work well with very bid tables
+* This plugin currently does not work well with big tables
 
 ## This project is stupid, the code is awful, go away
 
