@@ -24,8 +24,7 @@ local function find_row_start(buffer)
         if find_col_start(buffer, current_line) == nil then
             return current_line + 1
         elseif current_line == 1 then
-            -- Nothing found
-            return nil
+            return 0
         end
 
         current_line = current_line - 1
@@ -57,15 +56,54 @@ local function find_col_end(
     return #vim.api.nvim_buf_get_text(buffer, row_start, -1, row_start, -1, {})
 end
 
-local function _is_header_line(line)
-    for i = 1, #line do
-        local char = line:sub(i, i)
-        if char ~= o.options.export.markdown.characters.horizontal and char ~= o.options.export.markdown.characters.vertical then
+local function _is_header_line(line, widths)
+    -- Check for each cell whether it only contains horizontal chars and is the same length as widths
+    local previous_width = 0
+    local cell_index = 1
+
+    for i = 2, #line, 1 do
+        local char = string.sub(line, i, i)
+
+        if char == o.options.export.markdown.characters.vertical then
+            local expected_width = widths[cell_index]
+
+            -- Allow also - 2 width as some formatters apply spaces around the horizontal lines
+            if previous_width ~= expected_width and previous_width ~= expected_width - 2 then
+                return false
+            end
+
+            previous_width = 0
+            cell_index = cell_index + 1
+        elseif char ~= o.options.export.markdown.characters.horizontal and char ~= o.options.export.markdown.characters.filler then
             return false
+        else
+            previous_width = previous_width + 1
         end
     end
 
     return true
+end
+
+---Calculates the width of each column in the given line.
+---@param line string
+---@return table
+local function _get_widths(line)
+    local widths = {}
+
+    local current = 0
+    -- Skip first as it's a vertical line
+    for i = 2, #line do
+        local char = string.sub(line, i, i)
+
+        if char == o.options.export.markdown.characters.vertical then
+            widths[#widths + 1] = current
+            current = 0
+        else
+            current = current + 1
+        end
+    end
+
+    return widths
 end
 
 ---Extracts the raw table string from the given buffer.
@@ -82,8 +120,12 @@ local function extract_table(
 
     local table = {}
 
-    for _, line in ipairs(lines) do
-        if not _is_header_line(line) then
+    local widths = _get_widths(lines[1])
+
+    for i, line in ipairs(lines) do
+        local is_header = i == 2 and _is_header_line(line, widths)
+
+        if not is_header then
             table[#table + 1] = {}
 
             for content in string.gmatch(line, "[^" .. o.options.export.markdown.characters.vertical .. "]+") do

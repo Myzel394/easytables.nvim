@@ -540,7 +540,6 @@ function M:register_listeners()
         function()
             self:close()
 
-            print("export")
             self.on_export()
         end,
         {}
