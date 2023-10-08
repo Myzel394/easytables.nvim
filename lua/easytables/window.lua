@@ -74,6 +74,9 @@ function M:_set_window_positions()
     local width = self:get_table_width()
     local _, height = get_window_size(self.table:cols_amount(), self.table:rows_amount())
 
+    width = math.max(20, width)
+    height = math.max(10, height)
+
     vim.api.nvim_win_set_config(self.preview_window, {
         width = width,
         height = height,
