@@ -1,5 +1,4 @@
 local table_builder = require("easytables.tablebuilder")
-local export = require("easytables.export")
 local o = require("easytables.options")
 local math = require("math")
 
@@ -30,11 +29,21 @@ local function get_window_size(cols, rows)
     return _get_auto_size(cols, rows)
 end
 
+-- Just used for autocompletion
+local DEFAULT_OPTIONS = {
+    on_export = function() end,
+}
+
+---Create a new window for the given table
+---@param table table
+---@param options table
 function M:create(table, options)
     options = options or {}
 
     self.table = table
     self.previous_window = vim.api.nvim_get_current_win()
+
+    self.on_export = options.on_export or DEFAULT_OPTIONS.on_export
 
     return self
 end
@@ -525,22 +534,10 @@ function M:register_listeners()
         self.prompt_buffer,
         "ExportTable",
         function()
-            local markdown_table = export:export_table(self.table)
-
             self:close()
 
-            vim.schedule(function()
-                local cursor = vim.api.nvim_win_get_cursor(0)
-
-                vim.api.nvim_buf_set_text(
-                    0,
-                    cursor[1] - 1,
-                    cursor[2],
-                    cursor[1] - 1,
-                    cursor[2],
-                    markdown_table
-                )
-            end)
+            print("export")
+            self.on_export()
         end,
         {}
     )

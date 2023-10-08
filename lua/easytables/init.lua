@@ -2,6 +2,7 @@ local table = require("easytables.table")
 local window = require("easytables.window")
 local inputHelper = require("easytables.input")
 local o = require("easytables.options")
+local export = require("easytables.export")
 local import = require("easytables.import")
 
 ---Initialize `easytables` with the given options. This function **must** be called.
@@ -22,13 +23,33 @@ local function setup(options)
                 return
             end
 
-            -- tuple do not seem to be working with pcall
+            -- tuples do not seem to be working with pcall
             local cols = result[1]
             local rows = result[2]
 
             local markdown_table = table:create(cols, rows)
 
-            local win = window:create(markdown_table)
+            local win = window:create(
+                markdown_table,
+                {
+                    on_export = function()
+                        local new_table = export:export_table(markdown_table)
+
+                        vim.schedule(function()
+                            local cursor = vim.api.nvim_win_get_cursor(0)
+
+                            vim.api.nvim_buf_set_text(
+                                0,
+                                cursor[1] - 1,
+                                cursor[2],
+                                cursor[1] - 1,
+                                cursor[2],
+                                new_table
+                            )
+                        end)
+                    end
+                }
+            )
 
             win:show()
             win:register_listeners()
@@ -62,15 +83,23 @@ local function setup(options)
 
             local markdown_table = table:import(raw_table)
 
-            local win = window:create(markdown_table)
+            local win = window:create(
+                markdown_table,
+                {
+                    on_export = function()
+                        local new_table = export:export_table(markdown_table)
+
+                        vim.schedule(function()
+                            -- Remove old table
+                            vim.api.nvim_buf_set_lines(buffer, start_row, end_row, false, new_table)
+                        end)
+                    end
+                }
+            )
 
             win:show()
             win:register_listeners()
             win:draw_table()
-
-
-            -- Remove old table
-            vim.api.nvim_buf_set_lines(buffer, start_row - 1, end_row, false, {})
         end,
         {
             desc = "Import the current markdown table at the cursor's position into EasyTables"
