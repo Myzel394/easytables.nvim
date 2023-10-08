@@ -155,6 +155,7 @@ function M:show()
     self:_open_preview_window()
     self:_open_prompt_window()
     self:_set_window_positions()
+    self:_reset_prompt()
 end
 
 function M:_reset_prompt()
