@@ -26,6 +26,22 @@ function M:create(cols, rows)
     return self
 end
 
+function M:import(table)
+    self.table = table
+    self.highlighted_cell = {
+        col = 1,
+        row = 1,
+    }
+
+    if #table > 1 then
+        self.header_enabled = o.options.table.header_enabled_by_default
+    else
+        self.header_enabled = false
+    end
+
+    return self
+end
+
 function M:insert(col, row, value)
     self.table[row][col] = value
 end

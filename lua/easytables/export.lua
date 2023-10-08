@@ -13,7 +13,7 @@ function M:export_cell(content, width)
         o.options.export.markdown.characters.vertical
         .. padding
         .. content
-        .. string.rep(" ", width - #content)
+        .. string.rep(" ", width - vim.api.nvim_strwidth(content))
         .. padding
 end
 
