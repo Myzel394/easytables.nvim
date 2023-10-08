@@ -19,6 +19,10 @@ end
 local function find_row_start(buffer)
     local position = vim.api.nvim_win_get_cursor(0)
 
+    if find_col_start(buffer, position[1]) == nil then
+        return nil
+    end
+
     local current_line = position[1] - 1
     while true do
         if find_col_start(buffer, current_line) == nil then
