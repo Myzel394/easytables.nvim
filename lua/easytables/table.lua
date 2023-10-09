@@ -209,6 +209,20 @@ function M:swap_current_with_target(target)
     self:swap_contents(self:get_highlighted_cell(), target)
 end
 
+---Clamps the highlighted cell to the table
+function M:_clamp_highlight_cell()
+    self.highlighted_cell = {
+        col = math.max(
+            1,
+            math.min(self.highlighted_cell.col, self:cols_amount())
+        ),
+        row = math.max(
+            1,
+            math.min(self.highlighted_cell.row, self:rows_amount())
+        ),
+    }
+end
+
 ---Inserts a new empty row at the given index (zero based)
 ---Example: 0 would insert a new row at the top of the table
 ---Example: 1 would insert a new row at the second position of the table
@@ -238,6 +252,8 @@ function M:delete_col(col)
     for _, row in ipairs(self.table) do
         table.remove(row, col)
     end
+
+    self:_clamp_highlight_cell()
 end
 
 function M:delete_row(row)
@@ -249,6 +265,7 @@ function M:delete_row(row)
     table.remove(self.table, row)
 
     self.header_enabled = #self.table > 1
+    self:_clamp_highlight_cell()
 end
 
 function M:swap_cols(first, second)
