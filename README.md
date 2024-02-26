@@ -48,7 +48,7 @@ Go to your table (doesn't matter where, can be at a border or inside a cell) and
 
 **Make sure to call the `setup` function!**
 
-`after/plugins/easytables.lua`
+`after/plugin/easytables.lua`
 
 ```lua
 require("easytables").setup {
