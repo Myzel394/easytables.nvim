@@ -117,6 +117,8 @@ function M:_open_preview_window()
         height = 1
     })
 
+    vim.api.nvim_set_option_value("buftype", "nofile", { buf = self.preview_buffer })
+
     -- Disable default highlight
     vim.api.nvim_set_option_value(
         "winhighlight",
@@ -145,6 +147,8 @@ function M:_open_prompt_window()
         width = 1,
         height = 1
     })
+
+    vim.api.nvim_set_option_value("buftype", "nofile", { buf = self.prompt_buffer })
 
     vim.api.nvim_set_option_value('winhighlight', "Normal:Normal", { win = self.prompt_window })
 end
